@@ -9,7 +9,7 @@ function ProtectedRoute({ roles, children }) {
   }
 
   if (roles && !roles.includes(user.role)) {
-    return <div className="alert alert-warning">You do not have access to this page.</div>;
+    return <Navigate to="/login" replace />;
   }
 
   return children;

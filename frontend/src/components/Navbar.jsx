@@ -1,47 +1,70 @@
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
-function Navbar({ user }) {
-  const { logout } = useAuth();
+function Navbar() {
+  const { user, logout } = useAuth();
+
+  const renderTenantLinks = () => (
+    <>
+      <li className="nav-item">
+        <NavLink className="nav-link" to="/tenant-dashboard">Dashboard</NavLink>
+      </li>
+      <li className="nav-item">
+        <NavLink className="nav-link" to="/properties">Properties</NavLink>
+      </li>
+    </>
+  );
+
+  const renderOwnerLinks = () => (
+    <>
+      <li className="nav-item">
+        <NavLink className="nav-link" to="/owner-dashboard">Dashboard</NavLink>
+      </li>
+      <li className="nav-item">
+        <NavLink className="nav-link" to="/properties">Properties</NavLink>
+      </li>
+    </>
+  );
+
+  const renderAdminLinks = () => (
+    <>
+      <li className="nav-item">
+        <NavLink className="nav-link" to="/admin-dashboard">Dashboard</NavLink>
+      </li>
+      <li className="nav-item">
+        <NavLink className="nav-link" to="/properties">Properties</NavLink>
+      </li>
+    </>
+  );
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav className="navbar navbar-expand-lg navbar-light shadow-sm">
       <div className="container">
         <Link className="navbar-brand" to="/">LeaseFlow</Link>
+
         <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span className="navbar-toggler-icon" />
         </button>
+
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav me-auto">
             {user && (
               <>
-                <li className="nav-item">
-                  <NavLink className="nav-link" to="/properties">Properties</NavLink>
-                </li>
-                {user.role === 'tenant' && (
-                  <li className="nav-item">
-                    <NavLink className="nav-link" to="/tenant-dashboard">Tenant Dashboard</NavLink>
-                  </li>
-                )}
-                {user.role === 'owner' && (
-                  <li className="nav-item">
-                    <NavLink className="nav-link" to="/owner-dashboard">Owner Dashboard</NavLink>
-                  </li>
-                )}
-                {user.role === 'admin' && (
-                  <li className="nav-item">
-                    <NavLink className="nav-link" to="/admin-dashboard">Admin Dashboard</NavLink>
-                  </li>
-                )}
+                {user.role === 'tenant' && renderTenantLinks()}
+                {user.role === 'owner' && renderOwnerLinks()}
+                {user.role === 'admin' && renderAdminLinks()}
               </>
             )}
           </ul>
-          <ul className="navbar-nav ms-auto">
+
+          <ul className="navbar-nav ms-auto align-items-center">
             {user ? (
               <>
-                <li className="nav-item nav-link text-white">Hello, {user.name || user.email}</li>
+                <li className="nav-item me-3">
+                  <span className="nav-link text-dark">Hello, {user.name || user.email}</span>
+                </li>
                 <li className="nav-item">
-                  <button className="btn btn-outline-light btn-sm" onClick={logout}>Logout</button>
+                  <button className="btn btn-outline-secondary btn-sm" onClick={logout}>Logout</button>
                 </li>
               </>
             ) : (

@@ -33,5 +33,12 @@
     "email": "spoorthi123@gmail.com",
     "role": "admin",
     "createdAt": "2026-06-03T15:16:01.676Z"
+  },
+  {
+    "id": "6a20512a1c025a6656eda248",
+    "name": "spoorthi",
+    "email": "spoorthi12@gmail.com",
+    "role": "tenant",
+    "createdAt": "2026-06-03T16:07:06.838Z"
   }
 ]

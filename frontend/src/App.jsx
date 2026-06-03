@@ -14,9 +14,9 @@ function App() {
   const { user } = useAuth();
 
   return (
-    <div>
-      <Navbar user={user} />
-      <div className="container py-4">
+    <div className="app-shell">
+      <Navbar />
+      <main className="container py-5">
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
@@ -41,9 +41,33 @@ function App() {
             path="/properties/:id"
             element={<ProtectedRoute roles={["tenant","owner","admin"]}><PropertyDetail /></ProtectedRoute>}
           />
-          <Route path="*" element={<div className="text-center mt-5">Page not found.</div>} />
+          <Route
+            path="/requests"
+            element={
+              <ProtectedRoute roles={["tenant","owner"]}>
+                <Navigate to={user?.role === 'owner' ? '/owner-dashboard' : '/tenant-dashboard'} replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <Navigate to="/admin-dashboard" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <Navigate to="/admin-dashboard" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-      </div>
+      </main>
     </div>
   );
 }

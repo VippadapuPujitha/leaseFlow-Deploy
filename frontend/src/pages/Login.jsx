@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
@@ -7,8 +7,14 @@ function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate(user.role === 'admin' ? '/admin-dashboard' : user.role === 'owner' ? '/owner-dashboard' : '/tenant-dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -16,47 +22,40 @@ function Login() {
 
     try {
       const response = await api.post('/api/auth/login', { email, password });
-      const { token, user } = response.data;
-      login(user, token);
-      navigate(user.role === 'admin' ? '/admin-dashboard' : user.role === 'owner' ? '/owner-dashboard' : '/tenant-dashboard');
+      const { token, user: userData } = response.data;
+      login(userData, token);
+      navigate(userData.role === 'admin' ? '/admin-dashboard' : userData.role === 'owner' ? '/owner-dashboard' : '/tenant-dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed.');
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     }
   };
 
   return (
-    <div className="row justify-content-center">
-      <div className="col-md-6">
-        <div className="card shadow-sm">
-          <div className="card-body">
-            <h3 className="card-title mb-4">Login</h3>
-            {error && <div className="alert alert-danger">{error}</div>}
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label className="form-label">Email</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+    <div className="auth-page">
+      <div className="auth-panel">
+        <div className="row justify-content-center">
+          <div className="col-sm-10 col-md-6">
+            <div className="card auth-card">
+              <div className="card-body">
+                <div className="mb-4">
+                  <h3 className="mb-1">LeaseFlow</h3>
+                  <p className="text-muted mb-0">Sign in to manage leases, requests, and property workflows.</p>
+                </div>
+                {error && <div className="alert alert-danger">{error}</div>}
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-3">
+                    <label className="form-label">Email</label>
+                    <input type="email" className="form-control" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Password</label>
+                    <input type="password" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                  </div>
+                  <button type="submit" className="btn btn-gradient w-100">Sign in</button>
+                </form>
+                <p className="mt-4 text-center text-muted">New to LeaseFlow? <Link to="/register">Create an account</Link></p>
               </div>
-              <div className="mb-3">
-                <label className="form-label">Password</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <button type="submit" className="btn btn-primary w-100">Login</button>
-            </form>
-            <p className="mt-3 text-center">
-              Don&apos;t have an account? <Link to="/register">Register here</Link>
-            </p>
+            </div>
           </div>
         </div>
       </div>
