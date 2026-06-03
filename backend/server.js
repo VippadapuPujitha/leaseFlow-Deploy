@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
+const propertyRoutes = require("./routes/propertyRoutes");
 
 dotenv.config();
 
@@ -16,6 +17,9 @@ app.use(express.json());
 
 // Auth Routes
 app.use("/api/auth", authRoutes);
+
+// Property Routes
+app.use("/api/properties", propertyRoutes);
 
 app.get("/", (req, res) => {
   res.send("LeaseFlow API Running");

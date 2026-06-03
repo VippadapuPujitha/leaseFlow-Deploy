@@ -1,3 +1,6 @@
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
@@ -6,7 +9,7 @@ const connectDB = async () => {
 
     console.log("MongoDB Connected");
   } catch (error) {
-    console.error(error.message);
+    console.error(error);
     process.exit(1);
   }
 };
