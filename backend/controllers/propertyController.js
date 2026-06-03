@@ -181,4 +181,3 @@ module.exports = {
   rejectProperty,
   getDocument
 };
-console.log("FILES:", req.files);
