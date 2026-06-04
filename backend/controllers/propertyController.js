@@ -34,7 +34,6 @@ const createProperty = async (req, res) => {
   }
 };
 
-/* ---------------- READ FILE (IMPORTANT FIX) ---------------- */
 const getDocument = (req, res) => {
   try {
     const filename = req.params.filename;
@@ -61,54 +60,90 @@ const getDocument = (req, res) => {
   }
 };
 
-/* ---------------- OTHER FUNCTIONS (UNCHANGED) ---------------- */
-
 const getAllProperties = async (req, res) => {
   try {
-    const properties = await Property.find();
-    res.status(200).json({ success: true, count: properties.length, properties });
+    const properties = await Property.find().select("-ownerId");
+
+    res.status(200).json({
+      success: true,
+      count: properties.length,
+      properties
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
 const getPendingProperties = async (req, res) => {
   try {
     const properties = await Property.find({ status: "PENDING" });
-    res.status(200).json({ success: true, count: properties.length, properties });
+
+    res.status(200).json({
+      success: true,
+      count: properties.length,
+      properties
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
 const getPropertyById = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    const property = await Property.findById(req.params.id).select("-ownerId");
 
     if (!property) {
-      return res.status(404).json({ success: false, message: "Property not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Property not found"
+      });
     }
 
-    res.status(200).json({ success: true, property });
+    res.status(200).json({
+      success: true,
+      property
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
 const updateProperty = async (req, res) => {
   try {
-    const property = await Property.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
+    const property = await Property.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true
+      }
+    );
 
     if (!property) {
-      return res.status(404).json({ success: false, message: "Property not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Property not found"
+      });
     }
 
-    res.status(200).json({ success: true, property });
+    res.status(200).json({
+      success: true,
+      property
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
@@ -117,14 +152,23 @@ const deleteProperty = async (req, res) => {
     const property = await Property.findById(req.params.id);
 
     if (!property) {
-      return res.status(404).json({ success: false, message: "Property not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Property not found"
+      });
     }
 
     await property.deleteOne();
 
-    res.status(200).json({ success: true, message: "Property deleted successfully" });
+    res.status(200).json({
+      success: true,
+      message: "Property deleted successfully"
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
@@ -133,7 +177,10 @@ const approveProperty = async (req, res) => {
     const property = await Property.findById(req.params.id);
 
     if (!property) {
-      return res.status(404).json({ success: false, message: "Property not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Property not found"
+      });
     }
 
     property.status = "ACTIVE";
@@ -145,7 +192,10 @@ const approveProperty = async (req, res) => {
       property
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
@@ -154,7 +204,10 @@ const rejectProperty = async (req, res) => {
     const property = await Property.findById(req.params.id);
 
     if (!property) {
-      return res.status(404).json({ success: false, message: "Property not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Property not found"
+      });
     }
 
     property.status = "REJECTED";
@@ -166,7 +219,10 @@ const rejectProperty = async (req, res) => {
       property
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
