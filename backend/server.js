@@ -4,9 +4,10 @@ const dotenv = require("dotenv");
 
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const requestRoutes = require("./routes/requestRoutes");
-const reportRoutes = require("./routes/reportRoutes");
+
 
 dotenv.config();
 
@@ -25,11 +26,11 @@ app.use(express.json());
 // Auth Routes
 app.use("/api/auth", authRoutes);
 
+// User Routes
+app.use("/api/users", userRoutes);
+
 // Request Routes
 app.use("/api/requests", requestRoutes);
-
-// Report Routes
-app.use("/api/reports", reportRoutes);
 
 // Property Routes
 app.use("/api/properties", propertyRoutes);

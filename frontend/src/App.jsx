@@ -1,13 +1,19 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+
 import Login from './pages/Login';
 import Register from './pages/Register';
+
 import TenantDashboard from './pages/TenantDashboard';
 import OwnerDashboard from './pages/OwnerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+
 import PropertyList from './pages/PropertyList';
 import PropertyDetail from './pages/PropertyDetail';
+import Profile from './pages/Profile';
+
+import SavedProperties from "./pages/SavedProperties";
 import { useAuth } from './hooks/useAuth';
 
 function App() {
@@ -16,56 +22,140 @@ function App() {
   return (
     <div className="app-shell">
       <Navbar />
+
       <main className="container py-5">
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          {/* Default Route */}
+          <Route
+            path="/"
+            element={
+              user ? (
+                <Navigate
+                  to={
+                    user.role === 'admin'
+                      ? '/admin-dashboard'
+                      : user.role === 'owner'
+                      ? '/owner-dashboard'
+                      : '/tenant-dashboard'
+                  }
+                  replace
+                />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+
+          {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Profile Route */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute roles={['tenant', 'owner', 'admin']}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Tenant Dashboard */}
           <Route
             path="/tenant-dashboard"
-            element={<ProtectedRoute roles={["tenant"]}><TenantDashboard /></ProtectedRoute>}
+            element={
+              <ProtectedRoute roles={['tenant']}>
+                <TenantDashboard />
+              </ProtectedRoute>
+            }
           />
+
+          {/* Owner Dashboard */}
           <Route
             path="/owner-dashboard"
-            element={<ProtectedRoute roles={["owner"]}><OwnerDashboard /></ProtectedRoute>}
+            element={
+              <ProtectedRoute roles={['owner']}>
+                <OwnerDashboard />
+              </ProtectedRoute>
+            }
           />
+
+          {/* Admin Dashboard */}
           <Route
             path="/admin-dashboard"
-            element={<ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>}
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
           />
+
+          {/* Property List */}
           <Route
             path="/properties"
-            element={<ProtectedRoute roles={["tenant","owner","admin"]}><PropertyList /></ProtectedRoute>}
+            element={
+              <ProtectedRoute roles={['tenant', 'owner', 'admin']}>
+                <PropertyList />
+              </ProtectedRoute>
+            }
           />
+
+          {/* Property Details */}
           <Route
             path="/properties/:id"
-            element={<ProtectedRoute roles={["tenant","owner","admin"]}><PropertyDetail /></ProtectedRoute>}
+            element={
+              <ProtectedRoute roles={['tenant', 'owner', 'admin']}>
+                <PropertyDetail />
+              </ProtectedRoute>
+            }
           />
+
+          {/* Requests */}
           <Route
             path="/requests"
             element={
-              <ProtectedRoute roles={["tenant","owner"]}>
-                <Navigate to={user?.role === 'owner' ? '/owner-dashboard' : '/tenant-dashboard'} replace />
+              <ProtectedRoute roles={['tenant', 'owner']}>
+                <Navigate
+                  to={
+                    user?.role === 'owner'
+                      ? '/owner-dashboard'
+                      : '/tenant-dashboard'
+                  }
+                  replace
+                />
               </ProtectedRoute>
             }
           />
+
+          {/* Users */}
           <Route
             path="/users"
             element={
-              <ProtectedRoute roles={["admin"]}>
+              <ProtectedRoute roles={['admin']}>
                 <Navigate to="/admin-dashboard" replace />
               </ProtectedRoute>
             }
           />
+
+          {/*SavedProperties */}
           <Route
-            path="/reports"
+            path="/saved-properties"
             element={
-              <ProtectedRoute roles={["admin"]}>
-                <Navigate to="/admin-dashboard" replace />
+              <ProtectedRoute
+                roles={["tenant", "owner", "admin"]}
+              >
+                <SavedProperties />
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+
+          {/* Invalid Route */}
+          <Route
+            path="*"
+            element={<Navigate to="/login" replace />}
+          />
+
         </Routes>
       </main>
     </div>

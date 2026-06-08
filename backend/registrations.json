@@ -40,5 +40,21 @@
     "email": "spoorthi12@gmail.com",
     "role": "tenant",
     "createdAt": "2026-06-03T16:07:06.838Z"
+  },
+  {
+    "id": "6a26d32ab86554ece0232d83",
+    "name": "Test User",
+    "email": "testuser123@gmail.com",
+    "phone": "9876543210",
+    "role": "tenant",
+    "createdAt": "2026-06-08T14:35:22.688Z"
+  },
+  {
+    "id": "6a26fc99b86554ece0232d84",
+    "name": "Tenant1",
+    "email": "tenant1@test.com",
+    "phone": "1111111111",
+    "role": "tenant",
+    "createdAt": "2026-06-08T17:32:09.208Z"
   }
 ]

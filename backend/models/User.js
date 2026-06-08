@@ -26,7 +26,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["owner", "tenant", "admin"],
       default: "tenant"
-    }
+    },
+
+    savedProperties: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Property"
+      }
+    ]
   },
   {
     timestamps: true

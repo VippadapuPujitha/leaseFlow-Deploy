@@ -30,7 +30,9 @@ function TenantDashboard() {
   const [rentMax, setRentMax] = useState('');
   const [requests, setRequests] = useState([]);
   const [editingProfile, setEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({
+  const [savedProperties, setSavedProperties] = useState([]);
+  const [profileForm, setProfileForm] =
+   useState({
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
@@ -89,6 +91,19 @@ function TenantDashboard() {
     rejectedRequests: requests.filter((item) => item.status === 'Rejected').length,
     activeRentals: rentals.length,
   }), [properties.length, requests, rentals.length]);
+
+    const handleSaveProperty = async (propertyId) => {
+    try {
+      await api.post(`/api/users/save/${propertyId}`);
+
+      setSavedProperties((prev) => [
+        ...prev,
+        propertyId,
+      ]);
+    } catch (error) {
+      console.log(error.response?.data?.message);
+    }
+  };
 
   const handleSendRequest = async (property) => {
     try {
@@ -254,9 +269,39 @@ function TenantDashboard() {
                           </div>
                         </div>
                         <div className="property-card__footer d-flex gap-2 flex-wrap">
-                          <Link className="btn btn-outline-primary btn-sm flex-grow-1" to={`/properties/${property._id || property.id}`}>View Details</Link>
-                          <button type="button" className="btn btn-gradient btn-sm flex-grow-1" onClick={() => handleSendRequest(property)}>Request Property</button>
-                        </div>
+                        <Link
+                          className="btn btn-outline-primary btn-sm flex-grow-1"
+                          to={`/properties/${property._id || property.id}`}
+                        >
+                          View Details
+                        </Link>
+
+                        <button
+                          type="button"
+                          className="btn btn-outline-success btn-sm flex-grow-1"
+                          disabled={savedProperties.includes(
+                            property._id || property.id
+                          )}
+                          onClick={() =>
+                            handleSaveProperty(property._id || property.id)
+                          }
+                        >
+                          {savedProperties.includes(
+                            property._id || property.id
+                          )
+                            ? "Saved ✓"
+                            : "Save Property"}
+                        </button>
+
+                        <button
+                          type="button"
+                          className="btn btn-gradient btn-sm flex-grow-1"
+                          onClick={() => handleSendRequest(property)}
+                        >
+                          Request Property
+                        </button>
+                      </div>
+                         
                       </article>
                     );
                   })

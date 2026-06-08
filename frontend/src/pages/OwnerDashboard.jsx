@@ -8,7 +8,6 @@ const ownerNavigation = [
   { id: 'images', label: 'Upload Images', icon: '📷' },
   { id: 'documents', label: 'Upload Documents', icon: '📄' },
   { id: 'requests', label: 'Tenant Requests', icon: '📨' },
-  { id: 'reports', label: 'Reports', icon: '📊' },
 ];
 
 const initialForm = {
@@ -448,30 +447,7 @@ function OwnerDashboard() {
           </div>
         )}
 
-        {activeSection === 'reports' && (
-          <div className="card card-glass p-4">
-            <h2 className="mb-3">Reports</h2>
-            <p className="text-muted mb-4">Analyze property performance and request activity at a glance.</p>
-            <div className="details-grid">
-              <div className="details-card">
-                <strong>Listing quality</strong>
-                <p>{summary.total} properties with active media, pricing and status.</p>
-              </div>
-              <div className="details-card">
-                <strong>Pending approvals</strong>
-                <p>{summary.pending} items awaiting review.</p>
-              </div>
-              <div className="details-card">
-                <strong>Recent uptake</strong>
-                <p>{summary.occupied} occupied units across your portfolio.</p>
-              </div>
-              <div className="details-card">
-                <strong>Review insights</strong>
-                <p>Property cards and media uploads drive tenant interest.</p>
-              </div>
-            </div>
-          </div>
-        )}
+        
       </main>
     </div>
   );
