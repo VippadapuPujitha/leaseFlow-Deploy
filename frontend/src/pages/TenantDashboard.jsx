@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
+import SavedProperties from './SavedProperties';
 
 const tenantNavigation = [
   { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
   { id: 'browse', label: 'Browse Properties', icon: '🔍' },
+  { id: 'saved', label: 'Saved Properties', icon: '❤️' },
   { id: 'requests', label: 'My Requests', icon: '📨' },
   { id: 'rentals', label: 'My Rentals', icon: '🏡' },
   { id: 'profile', label: 'Profile', icon: '👤' },
@@ -51,22 +53,40 @@ function TenantDashboard() {
     },
   ]);
 
-  useEffect(() => {
-    const fetchProperties = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get('/api/properties');
-        const data = response.data;
-        setProperties(data.properties || data || []);
-      } catch (err) {
-        setError('Unable to load properties at this time.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchSavedProperties = async () => {
+    try {
+      const response = await api.get(
+        "/api/users/saved-properties"
+      );
 
-    fetchProperties();
-  }, []);
+      setSavedProperties(
+        response.data.map((property) => property._id)
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+  const fetchProperties = async () => {
+    setLoading(true);
+
+    try {
+      const response = await api.get('/api/properties');
+      const data = response.data;
+
+      setProperties(data.properties || data || []);
+    } catch (err) {
+      setError('Unable to load properties at this time.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProperties();
+  fetchSavedProperties();
+
+}, []);
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
@@ -93,17 +113,14 @@ function TenantDashboard() {
   }), [properties.length, requests, rentals.length]);
 
     const handleSaveProperty = async (propertyId) => {
-    try {
-      await api.post(`/api/users/save/${propertyId}`);
+  try {
+    await api.post(`/api/users/save/${propertyId}`);
 
-      setSavedProperties((prev) => [
-        ...prev,
-        propertyId,
-      ]);
-    } catch (error) {
-      console.log(error.response?.data?.message);
-    }
-  };
+    await fetchSavedProperties();
+  } catch (error) {
+    console.log(error.response?.data?.message);
+  }
+};
 
   const handleSendRequest = async (property) => {
     try {
@@ -277,21 +294,21 @@ function TenantDashboard() {
                         </Link>
 
                         <button
-                          type="button"
-                          className="btn btn-outline-success btn-sm flex-grow-1"
-                          disabled={savedProperties.includes(
-                            property._id || property.id
-                          )}
-                          onClick={() =>
-                            handleSaveProperty(property._id || property.id)
-                          }
-                        >
-                          {savedProperties.includes(
-                            property._id || property.id
-                          )
-                            ? "Saved ✓"
-                            : "Save Property"}
-                        </button>
+                            type="button"
+                            className="btn btn-outline-success btn-sm flex-grow-1"
+                            disabled={savedProperties.some(
+                              (id) => String(id) === String(property._id || property.id)
+                            )}
+                            onClick={() =>
+                              handleSaveProperty(property._id || property.id)
+                            }
+                          >
+                            {savedProperties.some(
+                              (id) => String(id) === String(property._id || property.id)
+                            )
+                              ? "Saved ✓"
+                              : "Save Property"}
+                          </button>
 
                         <button
                           type="button"
@@ -313,6 +330,9 @@ function TenantDashboard() {
           </>
         )}
 
+        {activeSection === 'saved' && (
+          <SavedProperties />
+        )}
         {activeSection === 'requests' && (
           <div className="card card-glass p-4">
             <h2 className="mb-3">My Requests</h2>

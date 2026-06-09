@@ -70,7 +70,11 @@ exports.saveProperty = async (req, res) => {
     }
 
     const user = await User.findById(req.user.id);
-
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
     const alreadySaved = user.savedProperties.some(
       (id) => id.toString() === propertyId
     );
@@ -102,7 +106,11 @@ exports.removeSavedProperty = async (req, res) => {
     const { propertyId } = req.params;
 
     const user = await User.findById(req.user.id);
-
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
     user.savedProperties = user.savedProperties.filter(
       (id) => id.toString() !== propertyId
     );

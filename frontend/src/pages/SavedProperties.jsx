@@ -25,7 +25,7 @@ function SavedProperties() {
     }
   };
 
-  const removeProperty = async (propertyId) => {
+const removeProperty = async (propertyId) => {
   try {
     await api.delete(`/api/users/save/${propertyId}`);
 
@@ -35,6 +35,9 @@ function SavedProperties() {
           property._id !== propertyId
       )
     );
+
+    window.location.reload();
+
   } catch (err) {
     console.log(
       err.response?.data?.message ||
