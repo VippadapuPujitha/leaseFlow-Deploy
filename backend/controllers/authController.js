@@ -1,30 +1,8 @@
-const fs = require("fs").promises;
-const path = require("path");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const usersJsonPath = path.join(__dirname, "..", "registrations.json");
-
-// Helper function to save user to JSON file
-const saveUserToJson = async (userData) => {
-  try {
-    let users = [];
-    try {
-      const fileContent = await fs.readFile(usersJsonPath, "utf8");
-      users = JSON.parse(fileContent);
-    } catch (err) {
-      // File doesn't exist yet, start with empty array
-      users = [];
-    }
-    users.push(userData);
-    await fs.writeFile(usersJsonPath, JSON.stringify(users, null, 2), "utf8");
-  } catch (err) {
-    console.error("Error saving user to JSON:", err.message);
-  }
-};
-
-//register
+// Register
 exports.register = async (req, res) => {
   try {
     const { name, email, password, phone, role } = req.body;
@@ -47,16 +25,6 @@ exports.register = async (req, res) => {
       role,
     });
 
-    // Save registration details to JSON file
-    await saveUserToJson({
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      createdAt: user.createdAt,
-    });
-
     res.status(201).json({
       message: "User registered successfully",
       user: {
@@ -74,8 +42,7 @@ exports.register = async (req, res) => {
   }
 };
 
-
-//login
+// Login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -116,6 +83,7 @@ exports.login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       },
     });
@@ -126,10 +94,17 @@ exports.login = async (req, res) => {
   }
 };
 
-//profile api
+// Profile API
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user.id)
+      .select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
 
     res.status(200).json(user);
   } catch (error) {
@@ -138,4 +113,3 @@ exports.getProfile = async (req, res) => {
     });
   }
 };
-
