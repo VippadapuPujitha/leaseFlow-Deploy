@@ -66,6 +66,20 @@ function TenantDashboard() {
       console.log(error);
     }
   };
+  const fetchProfile = async () => {
+  try {
+    const response = await api.get("/api/users/profile");
+
+    setProfileForm((prev) => ({
+      ...prev,
+      name: response.data.name || "",
+      email: response.data.email || "",
+      phone: response.data.phone || "",
+    }));
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   useEffect(() => {
   const fetchProperties = async () => {
@@ -85,6 +99,7 @@ function TenantDashboard() {
 
   fetchProperties();
   fetchSavedProperties();
+  fetchProfile();
 
 }, []);
 
@@ -150,16 +165,39 @@ function TenantDashboard() {
     setProfileForm((prev) => ({ ...prev, profilePicture: file }));
   };
 
-  const handleSaveProfile = (event) => {
-    event.preventDefault();
-    if (!profileForm.name || !profileForm.email) {
-      setProfileError('Name and email are required.');
-      return;
-    }
-    setProfileError('');
-    setProfileMessage('Profile updated successfully.');
+  const handleSaveProfile = async (event) => {
+  event.preventDefault();
+
+  if (!profileForm.name || !profileForm.email) {
+    setProfileError("Name and email are required.");
+    return;
+  }
+
+  if (!/^\d{10}$/.test(profileForm.phone)) {
+    setProfileError(
+      "Phone number must be exactly 10 digits."
+    );
+    return;
+  }
+
+  try {
+    await api.put("/api/users/profile", {
+      name: profileForm.name,
+      phone: profileForm.phone,
+    });
+
+    setProfileError("");
+    setProfileMessage(
+      "Profile updated successfully."
+    );
     setEditingProfile(false);
-  };
+  } catch (error) {
+    setProfileError(
+      error.response?.data?.message ||
+      "Failed to update profile"
+    );
+  }
+};
 
   return (
     <div className="dashboard-layout">
@@ -422,12 +460,19 @@ function TenantDashboard() {
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Phone number</label>
-                    <input className="form-control" value={profileForm.phone} onChange={(e) => handleProfileChange('phone', e.target.value)} placeholder="Enter phone number" />
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Profile picture</label>
-                    <input type="file" className="form-control" accept="image/*" onChange={(e) => handleProfileUpload(e.target.files[0] || null)} />
-                  </div>
+                  <input
+                    className="form-control"
+                    value={profileForm.phone}
+                    maxLength="10"
+                    onChange={(e) =>
+                      handleProfileChange(
+                        "phone",
+                        e.target.value.replace(/\D/g, "")
+                      )
+                    }
+                    placeholder="Enter 10-digit phone number"
+                  />
                   <div className="col-12 d-flex gap-2 flex-wrap">
                     <button type="submit" className="btn btn-primary">Save Profile</button>
                     <button type="button" className="btn btn-outline-secondary" onClick={() => setEditingProfile(false)}>Cancel</button>
@@ -449,8 +494,8 @@ function TenantDashboard() {
                   <p>Tenant</p>
                 </div>
                 <div className="details-card">
-                  <strong>Membership</strong>
-                  <p>Standard</p>
+                  <strong>Phone Number</strong>
+                  <p>{profileForm.phone || "Not Added"}</p>
                 </div>
               </div>
             )}
