@@ -1,18 +1,18 @@
 const express = require("express");
 
-const {
-  sendRequest,
-} = require("../controllers/requestController");
+const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");
 
-const router = express.Router();
+const {
+  sendRentalRequest
+} = require("../controllers/requestController");
 
 // Tenant sends rental request
 router.post(
   "/send",
   authMiddleware,
-  sendRequest
+  sendRentalRequest
 );
 
 module.exports = router;
