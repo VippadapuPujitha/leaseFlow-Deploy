@@ -15,11 +15,28 @@ const createProperty = async (req, res) => {
       rent: req.body.rent,
       propertyType: req.body.propertyType,
       description: req.body.description,
+
+      // Maps Coordinates
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
+
       images,
+
+      // Existing Documents
       taxReceipt: req.files?.taxReceipt?.[0]?.path || "",
       aadhaarPan: req.files?.aadhaarPan?.[0]?.path || "",
       electricityBill: req.files?.electricityBill?.[0]?.path || "",
-      ownerId: req.body.ownerId
+
+      // New Documents
+      taxDocument: req.files?.taxDocument?.[0]?.path || "",
+      ownershipDocument: req.files?.ownershipDocument?.[0]?.path || "",
+
+      ownerId: req.body.ownerId,
+
+      // New Status Fields
+      verificationStatus: "pending",
+      rentalStatus: "available",
+      isHidden: false
     });
 
     res.status(201).json({
@@ -96,7 +113,7 @@ const getPendingProperties = async (req, res) => {
 
 const getPropertyById = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id).select("-ownerId");
+    const property = await Property.findById(req.params.id);
 
     if (!property) {
       return res.status(404).json({
@@ -105,9 +122,15 @@ const getPropertyById = async (req, res) => {
       });
     }
 
+    const googleMapsLink =
+      property.latitude && property.longitude
+        ? `https://www.google.com/maps?q=${property.latitude},${property.longitude}`
+        : null;
+
     res.status(200).json({
       success: true,
-      property
+      property,
+      googleMapsLink
     });
   } catch (error) {
     res.status(500).json({
@@ -184,6 +207,8 @@ const approveProperty = async (req, res) => {
     }
 
     property.status = "ACTIVE";
+    property.verificationStatus = "approved";
+
     await property.save();
 
     res.status(200).json({
@@ -198,7 +223,80 @@ const approveProperty = async (req, res) => {
     });
   }
 };
+const getOwnerProperties = async (req, res) => {
+  try {
+    const { ownerId } = req.params;
 
+    const properties = await Property.find({ ownerId });
+
+    res.status(200).json({
+      success: true,
+      count: properties.length,
+      properties
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+const finalizeRental = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        message: "Property not found"
+      });
+    }
+
+    property.rentalStatus = "rented";
+
+    await property.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Property marked as rented",
+      property
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+const togglePropertyVisibility = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        message: "Property not found"
+      });
+    }
+
+    property.isHidden = !property.isHidden;
+
+    await property.save();
+
+    res.status(200).json({
+      success: true,
+      message: property.isHidden
+        ? "Property hidden successfully"
+        : "Property visible successfully",
+      property
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 const rejectProperty = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
@@ -211,6 +309,9 @@ const rejectProperty = async (req, res) => {
     }
 
     property.status = "REJECTED";
+    property.verificationStatus = "rejected";
+    property.rejectionReason = req.body.rejectionReason || "";
+
     await property.save();
 
     res.status(200).json({
@@ -225,7 +326,137 @@ const rejectProperty = async (req, res) => {
     });
   }
 };
+const requestVerification = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
 
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        message: "Property not found"
+      });
+    }
+
+    property.verificationStatus = "pending";
+    property.rejectionReason = "";
+
+    await property.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Verification request submitted successfully",
+      property
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+const getAvailableProperties = async (req, res) => {
+  try {
+    const properties = await Property.find({
+      status: "ACTIVE",
+      rentalStatus: "available",
+      isHidden: false
+    });
+
+    res.status(200).json({
+      success: true,
+      count: properties.length,
+      properties
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+const searchProperties = async (req, res) => {
+  try {
+    const { propertyType, maxRent, location } = req.query;
+
+    let filter = {
+      status: "ACTIVE",
+      rentalStatus: "available",
+      isHidden: false
+    };
+
+    if (propertyType) {
+      filter.propertyType = propertyType;
+    }
+
+    if (maxRent) {
+      filter.rent = { $lte: Number(maxRent) };
+    }
+
+    if (location) {
+      filter.address = {
+        $regex: location,
+        $options: "i"
+      };
+    }
+
+    const properties = await Property.find(filter);
+
+    res.status(200).json({
+      success: true,
+      count: properties.length,
+      properties
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+const getOwnerStats = async (req, res) => {
+  try {
+    const { ownerId } = req.params;
+
+    const totalProperties = await Property.countDocuments({ ownerId });
+
+    const activeProperties = await Property.countDocuments({
+      ownerId,
+      status: "ACTIVE"
+    });
+
+    const pendingProperties = await Property.countDocuments({
+      ownerId,
+      status: "PENDING"
+    });
+
+    const rentedProperties = await Property.countDocuments({
+      ownerId,
+      rentalStatus: "rented"
+    });
+
+    const hiddenProperties = await Property.countDocuments({
+      ownerId,
+      isHidden: true
+    });
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalProperties,
+        activeProperties,
+        pendingProperties,
+        rentedProperties,
+        hiddenProperties
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 module.exports = {
   createProperty,
   getAllProperties,
@@ -235,5 +466,12 @@ module.exports = {
   deleteProperty,
   approveProperty,
   rejectProperty,
-  getDocument
+  getDocument,
+  getOwnerProperties,
+  finalizeRental,
+  togglePropertyVisibility,
+  requestVerification,
+  getAvailableProperties,
+  searchProperties,
+  getOwnerStats
 };

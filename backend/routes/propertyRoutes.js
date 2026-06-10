@@ -12,7 +12,14 @@ const {
   deleteProperty,
   approveProperty,
   rejectProperty,
-  getDocument
+  getDocument,
+  getOwnerProperties,
+  finalizeRental,
+  togglePropertyVisibility,
+  requestVerification,
+  getAvailableProperties,
+  searchProperties,
+  getOwnerStats
 } = require("../controllers/propertyController");
 
 /* ---------------- CREATE PROPERTY ---------------- */
@@ -27,12 +34,16 @@ router.post(
   createProperty
 );
 
-/* ---------------- FILE ACCESS (IMPORTANT) ---------------- */
+/* ---------------- FILE ACCESS ---------------- */
 router.get("/document/:filename", getDocument);
 
 /* ---------------- READ ---------------- */
 router.get("/", getAllProperties);
 router.get("/pending", getPendingProperties);
+router.get("/available", getAvailableProperties);
+router.get("/search/filter", searchProperties);
+router.get("/owner/:ownerId", getOwnerProperties);
+router.get("/owner-stats/:ownerId", getOwnerStats);
 router.get("/:id", getPropertyById);
 
 /* ---------------- UPDATE ---------------- */
@@ -45,4 +56,12 @@ router.delete("/:id", deleteProperty);
 router.put("/approve/:id", approveProperty);
 router.put("/reject/:id", rejectProperty);
 
+/* ---------------- RENTAL ---------------- */
+router.put("/finalize-rental/:id", finalizeRental);
+
+/* ---------------- VISIBILITY ---------------- */
+router.put("/toggle-visibility/:id", togglePropertyVisibility);
+
+/* ---------------- VERIFICATION ---------------- */
+router.put("/request-verification/:id", requestVerification);
 module.exports = router;
