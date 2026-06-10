@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../api/axiosConfig';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const ownerNavigation = [
   { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
@@ -8,7 +9,6 @@ const ownerNavigation = [
   { id: 'images', label: 'Upload Images', icon: '📷' },
   { id: 'documents', label: 'Upload Documents', icon: '📄' },
   { id: 'requests', label: 'Tenant Requests', icon: '📨' },
-  { id: 'reports', label: 'Reports', icon: '📊' },
 ];
 
 const initialForm = {
@@ -24,11 +24,21 @@ const initialForm = {
 const propertyTypes = ['Apartment', 'House', 'Condo', 'Office', 'Retail'];
 
 function OwnerDashboard() {
+   const { user } = useAuth();  
   const [activeSection, setActiveSection] = useState('dashboard');
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [properties, setProperties] = useState([]);
+
+const [stats, setStats] = useState({
+  totalProperties: 0,
+  activeProperties: 0,
+  pendingProperties: 0,
+  rentedProperties: 0,
+  hiddenProperties: 0
+});
   const [form, setForm] = useState(initialForm);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState({ images: [], taxReceipt: null, aadhaarPan: null, electricityBill: null });
@@ -448,30 +458,7 @@ function OwnerDashboard() {
           </div>
         )}
 
-        {activeSection === 'reports' && (
-          <div className="card card-glass p-4">
-            <h2 className="mb-3">Reports</h2>
-            <p className="text-muted mb-4">Analyze property performance and request activity at a glance.</p>
-            <div className="details-grid">
-              <div className="details-card">
-                <strong>Listing quality</strong>
-                <p>{summary.total} properties with active media, pricing and status.</p>
-              </div>
-              <div className="details-card">
-                <strong>Pending approvals</strong>
-                <p>{summary.pending} items awaiting review.</p>
-              </div>
-              <div className="details-card">
-                <strong>Recent uptake</strong>
-                <p>{summary.occupied} occupied units across your portfolio.</p>
-              </div>
-              <div className="details-card">
-                <strong>Review insights</strong>
-                <p>Property cards and media uploads drive tenant interest.</p>
-              </div>
-            </div>
-          </div>
-        )}
+        
       </main>
     </div>
   );

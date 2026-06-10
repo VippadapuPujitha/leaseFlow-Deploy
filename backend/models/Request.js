@@ -13,12 +13,16 @@ const requestSchema = new mongoose.Schema(
       ref: "Property",
       required: true,
     },
-
+    
     status: {
       type: String,
-      enum: ["pending", "accepted", "rejected"],
+      enum: ["pending", "accepted", "rejected","withdrawn"],
       default: "pending",
     },
+    contactShared: {
+      type: Boolean,
+      default: false,
+  },
   },
   {
     timestamps: true,

@@ -19,14 +19,22 @@ const userSchema = new mongoose.Schema(
     },
 
     phone: {
-      type: String
-    },
+    type: String,
+    match: [/^\d{10}$/, "Phone number must be 10 digits"]
+  },
 
     role: {
       type: String,
       enum: ["owner", "tenant", "admin"],
       default: "tenant"
-    }
+    },
+
+    savedProperties: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Property"
+      }
+    ]
   },
   {
     timestamps: true

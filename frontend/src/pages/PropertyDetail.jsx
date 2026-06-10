@@ -84,7 +84,28 @@ function PropertyDetail() {
           <strong>Available from</strong>
           <p>{property.availableDate || 'Immediate'}</p>
         </div>
+        <div className="details-card mb-3">
+  <strong>Verification Status</strong>
+  <p>{property.verificationStatus || 'Pending'}</p>
+</div>
+
+<div className="details-card mb-3">
+  <strong>Rental Status</strong>
+  <p>{property.rentalStatus || 'Available'}</p>
+</div>
       </div>
+      {property.latitude != null && property.longitude != null && (
+  <div className="mt-4">
+    <a
+      href={`https://www.google.com/maps?q=${property.latitude},${property.longitude}`}
+      target="_blank"
+      rel="noreferrer"
+      className="btn btn-primary"
+    >
+      View on Google Maps
+    </a>
+  </div>
+)}
     </div>
   );
 }

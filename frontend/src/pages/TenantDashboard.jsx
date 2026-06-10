@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
+import SavedProperties from './SavedProperties';
 
 const tenantNavigation = [
   { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
   { id: 'browse', label: 'Browse Properties', icon: '🔍' },
+  { id: 'saved', label: 'Saved Properties', icon: '❤️' },
   { id: 'requests', label: 'My Requests', icon: '📨' },
   { id: 'rentals', label: 'My Rentals', icon: '🏡' },
   { id: 'profile', label: 'Profile', icon: '👤' },
@@ -30,7 +32,9 @@ function TenantDashboard() {
   const [rentMax, setRentMax] = useState('');
   const [requests, setRequests] = useState([]);
   const [editingProfile, setEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({
+  const [savedProperties, setSavedProperties] = useState([]);
+  const [profileForm, setProfileForm] =
+   useState({
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
@@ -49,22 +53,55 @@ function TenantDashboard() {
     },
   ]);
 
-  useEffect(() => {
-    const fetchProperties = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get('/api/properties');
-        const data = response.data;
-        setProperties(data.properties || data || []);
-      } catch (err) {
-        setError('Unable to load properties at this time.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchSavedProperties = async () => {
+    try {
+      const response = await api.get(
+        "/api/users/saved-properties"
+      );
 
-    fetchProperties();
-  }, []);
+      setSavedProperties(
+        response.data.map((property) => property._id)
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const fetchProfile = async () => {
+  try {
+    const response = await api.get("/api/users/profile");
+
+    setProfileForm((prev) => ({
+      ...prev,
+      name: response.data.name || "",
+      email: response.data.email || "",
+      phone: response.data.phone || "",
+    }));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+  useEffect(() => {
+  const fetchProperties = async () => {
+    setLoading(true);
+
+    try {
+      const response = await api.get('/api/properties');
+      const data = response.data;
+
+      setProperties(data.properties || data || []);
+    } catch (err) {
+      setError('Unable to load properties at this time.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProperties();
+  fetchSavedProperties();
+  fetchProfile();
+
+}, []);
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
@@ -89,6 +126,16 @@ function TenantDashboard() {
     rejectedRequests: requests.filter((item) => item.status === 'Rejected').length,
     activeRentals: rentals.length,
   }), [properties.length, requests, rentals.length]);
+
+    const handleSaveProperty = async (propertyId) => {
+  try {
+    await api.post(`/api/users/save/${propertyId}`);
+
+    await fetchSavedProperties();
+  } catch (error) {
+    console.log(error.response?.data?.message);
+  }
+};
 
   const handleSendRequest = async (property) => {
     try {
@@ -118,16 +165,39 @@ function TenantDashboard() {
     setProfileForm((prev) => ({ ...prev, profilePicture: file }));
   };
 
-  const handleSaveProfile = (event) => {
-    event.preventDefault();
-    if (!profileForm.name || !profileForm.email) {
-      setProfileError('Name and email are required.');
-      return;
-    }
-    setProfileError('');
-    setProfileMessage('Profile updated successfully.');
+  const handleSaveProfile = async (event) => {
+  event.preventDefault();
+
+  if (!profileForm.name || !profileForm.email) {
+    setProfileError("Name and email are required.");
+    return;
+  }
+
+  if (!/^\d{10}$/.test(profileForm.phone)) {
+    setProfileError(
+      "Phone number must be exactly 10 digits."
+    );
+    return;
+  }
+
+  try {
+    await api.put("/api/users/profile", {
+      name: profileForm.name,
+      phone: profileForm.phone,
+    });
+
+    setProfileError("");
+    setProfileMessage(
+      "Profile updated successfully."
+    );
     setEditingProfile(false);
-  };
+  } catch (error) {
+    setProfileError(
+      error.response?.data?.message ||
+      "Failed to update profile"
+    );
+  }
+};
 
   return (
     <div className="dashboard-layout">
@@ -254,9 +324,39 @@ function TenantDashboard() {
                           </div>
                         </div>
                         <div className="property-card__footer d-flex gap-2 flex-wrap">
-                          <Link className="btn btn-outline-primary btn-sm flex-grow-1" to={`/properties/${property._id || property.id}`}>View Details</Link>
-                          <button type="button" className="btn btn-gradient btn-sm flex-grow-1" onClick={() => handleSendRequest(property)}>Request Property</button>
-                        </div>
+                        <Link
+                          className="btn btn-outline-primary btn-sm flex-grow-1"
+                          to={`/properties/${property._id || property.id}`}
+                        >
+                          View Details
+                        </Link>
+
+                        <button
+                            type="button"
+                            className="btn btn-outline-success btn-sm flex-grow-1"
+                            disabled={savedProperties.some(
+                              (id) => String(id) === String(property._id || property.id)
+                            )}
+                            onClick={() =>
+                              handleSaveProperty(property._id || property.id)
+                            }
+                          >
+                            {savedProperties.some(
+                              (id) => String(id) === String(property._id || property.id)
+                            )
+                              ? "Saved ✓"
+                              : "Save Property"}
+                          </button>
+
+                        <button
+                          type="button"
+                          className="btn btn-gradient btn-sm flex-grow-1"
+                          onClick={() => handleSendRequest(property)}
+                        >
+                          Request Property
+                        </button>
+                      </div>
+                         
                       </article>
                     );
                   })
@@ -268,6 +368,9 @@ function TenantDashboard() {
           </>
         )}
 
+        {activeSection === 'saved' && (
+          <SavedProperties />
+        )}
         {activeSection === 'requests' && (
           <div className="card card-glass p-4">
             <h2 className="mb-3">My Requests</h2>
@@ -357,12 +460,19 @@ function TenantDashboard() {
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Phone number</label>
-                    <input className="form-control" value={profileForm.phone} onChange={(e) => handleProfileChange('phone', e.target.value)} placeholder="Enter phone number" />
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Profile picture</label>
-                    <input type="file" className="form-control" accept="image/*" onChange={(e) => handleProfileUpload(e.target.files[0] || null)} />
-                  </div>
+                  <input
+                    className="form-control"
+                    value={profileForm.phone}
+                    maxLength="10"
+                    onChange={(e) =>
+                      handleProfileChange(
+                        "phone",
+                        e.target.value.replace(/\D/g, "")
+                      )
+                    }
+                    placeholder="Enter 10-digit phone number"
+                  />
                   <div className="col-12 d-flex gap-2 flex-wrap">
                     <button type="submit" className="btn btn-primary">Save Profile</button>
                     <button type="button" className="btn btn-outline-secondary" onClick={() => setEditingProfile(false)}>Cancel</button>
@@ -384,8 +494,8 @@ function TenantDashboard() {
                   <p>Tenant</p>
                 </div>
                 <div className="details-card">
-                  <strong>Membership</strong>
-                  <p>Standard</p>
+                  <strong>Phone Number</strong>
+                  <p>{profileForm.phone || "Not Added"}</p>
                 </div>
               </div>
             )}
