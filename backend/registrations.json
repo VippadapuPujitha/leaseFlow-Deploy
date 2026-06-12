@@ -1,0 +1,10 @@
+[
+  {
+    "id": "6a2862f12aafa32f0e05b587",
+    "name": "owner1",
+    "email": "owner1@test.com",
+    "phone": "1111111111",
+    "role": "owner",
+    "createdAt": "2026-06-09T19:01:05.046Z"
+  }
+]

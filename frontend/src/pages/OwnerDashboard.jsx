@@ -30,7 +30,7 @@ function OwnerDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
-  const [properties, setProperties] = useState([]);
+
 
 const [stats, setStats] = useState({
   totalProperties: 0,
