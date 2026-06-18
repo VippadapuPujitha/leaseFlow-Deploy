@@ -67,7 +67,7 @@ const propertySchema = new mongoose.Schema(
     // Verification Tracking
     verificationStatus: {
         type: String,
-        enum: ["pending", "approved", "rejected"],
+        enum: ["pending", "approved", "verified", "rejected"],
         default: "pending"
     },
 
