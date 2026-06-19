@@ -8,6 +8,9 @@ import Register from './pages/Register';
 import TenantDashboard from './pages/TenantDashboard';
 import OwnerDashboard from './pages/OwnerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import VerificationRequests from './pages/VerificationRequests';
+import AllProperties from './pages/AllProperties';
+import VerificationDetails from './pages/VerificationDetails';
 
 import PropertyList from './pages/PropertyList';
 import PropertyDetail from './pages/PropertyDetail';
@@ -89,6 +92,38 @@ function App() {
                 <AdminDashboard />
               </ProtectedRoute>
             }
+          />
+
+          <Route
+            path="/admin/verification-requests"
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <VerificationRequests />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/all-properties"
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <AllProperties />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/verification/:id"
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <VerificationDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={<Navigate to="/admin-dashboard" replace />}
           />
 
           {/* Property List */}

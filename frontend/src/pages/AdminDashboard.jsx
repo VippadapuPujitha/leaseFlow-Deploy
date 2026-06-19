@@ -1,344 +1,188 @@
 import { useEffect, useMemo, useState } from 'react';
-import api from '../api/axiosConfig';
+import { Link } from 'react-router-dom';
+import { getAdminProperties, getVerificationQueue } from '../services/adminService';
 
-const adminNavigation = [
-  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-  { id: 'properties', label: 'All Properties', icon: '🏠' },
-  { id: 'pending', label: 'Pending Properties', icon: '⏳' },
-  { id: 'users', label: 'Users', icon: '👥' },
-  { id: 'analytics', label: 'Analytics', icon: '📈' },
-];
-
-const userSamples = {
-  owners: [
-    { id: 'OWNER-1', name: 'Sara Lee', email: 'sara@landowners.com' },
-    { id: 'OWNER-2', name: 'David Kim', email: 'david@urbanestate.com' },
-  ],
-  tenants: [
-    { id: 'TENANT-1', name: 'Maya Johnson', email: 'maya@gmail.com' },
-    { id: 'TENANT-2', name: 'Alex Cruz', email: 'alex@tenantmail.com' },
-  ],
+const normalizeVerificationStatus = (status) => {
+  const value = String(status || 'pending').toLowerCase();
+  return value === 'approved' ? 'verified' : value;
 };
 
 function AdminDashboard() {
-  const [activeSection, setActiveSection] = useState('dashboard');
   const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [verificationQueue, setVerificationQueue] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAdminData = async () => {
       setLoading(true);
+      setError('');
+
       try {
-        const response = await api.get('/api/properties');
-        const data = response.data;
-        setProperties(data.properties || data || []);
-      } catch (err) {
-        setError('Unable to load platform metrics.');
+        const [propertiesResponse, queueResponse] = await Promise.all([
+          getAdminProperties(),
+          getVerificationQueue(),
+        ]);
+
+        setProperties(propertiesResponse.data.properties || []);
+        setVerificationQueue(queueResponse.data.properties || []);
+      } catch (fetchError) {
+        setError(fetchError.response?.data?.message || 'Unable to load admin dashboard.');
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+
+    fetchAdminData();
   }, []);
 
-  const statusCounts = useMemo(() => {
-    return properties.reduce(
-      (acc, property) => {
-        const status = (property.status || 'available').toLowerCase();
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
+  const summary = useMemo(() => {
+    const counts = properties.reduce(
+      (accumulator, property) => {
+        const status = normalizeVerificationStatus(property.verificationStatus);
+
+        if (status === 'pending') accumulator.pending += 1;
+        if (status === 'verified') accumulator.verified += 1;
+        if (status === 'rejected') accumulator.rejected += 1;
+
+        return accumulator;
       },
-      { available: 0, leased: 0, pending: 0, rejected: 0, active: 0 },
+      { pending: 0, verified: 0, rejected: 0 }
     );
+
+    return {
+      total: properties.length,
+      pending: counts.pending,
+      verified: counts.verified,
+      rejected: counts.rejected,
+    };
   }, [properties]);
 
-  const dashboardStats = useMemo(() => ({
-    totalProperties: properties.length,
-    totalOwners: userSamples.owners.length,
-    totalTenants: userSamples.tenants.length,
-    totalRequests: 24,
-    approvedRequests: 14,
-    rejectedRequests: 4,
-    pendingRequests: 6,
-    availableProperties: statusCounts.available,
-    occupiedProperties: statusCounts.leased + statusCounts.active,
-  }), [properties.length, statusCounts.available, statusCounts.leased, statusCounts.active]);
-
-  const pendingProperties = properties.filter((property) => (property.status || '').toLowerCase() === 'pending');
-
-  const handleAdminAction = async (propertyId, action) => {
-    setError('');
-    setStatusMessage('');
-    try {
-      const route = action === 'approve' ? 'approve' : 'reject';
-      const response = await api.put(`/api/properties/${route}/${propertyId}`);
-      const updated = response.data.property || response.data;
-      setProperties((prev) => prev.map((item) => (item._id === updated._id || item.id === updated.id ? updated : item)));
-      setStatusMessage(`Property ${action}d successfully.`);
-    } catch (err) {
-      setError('Unable to update property status.');
-    }
-  };
-
   return (
-    <div className="dashboard-layout">
-      <aside className="dashboard-sidebar card-glass p-4">
-        <div className="sidebar-brand mb-4">
-          <div className="sidebar-logo">LeaseFlow</div>
-          <p className="text-muted mb-0">Admin control panel</p>
+    <div className="admin-shell">
+      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
+        <div>
+          <p className="admin-eyebrow mb-2">Admin Module</p>
+          <h1 className="page-title mb-2">Verification Control Center</h1>
+          <p className="page-subtitle mb-0">
+            Manage property verification, approvals, and removals from one place.
+          </p>
         </div>
-        <nav className="dashboard-nav">
-          {adminNavigation.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`dashboard-link ${activeSection === item.id ? 'active' : ''}`}
-              onClick={() => setActiveSection(item.id)}
-            >
-              <span>{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
-        </nav>
-      </aside>
+        <div className="d-flex flex-wrap gap-2">
+          <Link to="/admin/verification-requests" className="btn btn-gradient">
+            Review Queue
+          </Link>
+          <Link to="/admin/all-properties" className="btn btn-secondary-soft">
+            View All Properties
+          </Link>
+        </div>
+      </div>
 
-      <main className="dashboard-main">
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+      {loading && <div className="alert alert-info">Loading admin dashboard...</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
+
+      <div className="stat-grid mb-4">
+        <div className="stat-card">
+          <div className="stat-card__title">Total Properties</div>
+          <div className="stat-card__value">{summary.total}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card__title">Pending Verifications</div>
+          <div className="stat-card__value">{summary.pending}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card__title">Verified Properties</div>
+          <div className="stat-card__value">{summary.verified}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card__title">Rejected Properties</div>
+          <div className="stat-card__value">{summary.rejected}</div>
+        </div>
+      </div>
+
+      <div className="row g-4 mb-4">
+        <div className="col-md-6">
+          <div className="card card-glass h-100 p-4 admin-action-card">
+            <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
+              <div>
+                <h3 className="h5 mb-2">Verification Queue</h3>
+                <p className="text-muted mb-0">
+                  Review new submissions and process pending verification requests.
+                </p>
+              </div>
+              <span className="badge bg-primary-soft text-primary">{verificationQueue.length} pending</span>
+            </div>
+            <Link to="/admin/verification-requests" className="btn btn-outline-primary mt-auto align-self-start">
+              Open queue
+            </Link>
+          </div>
+        </div>
+        <div className="col-md-6">
+          <div className="card card-glass h-100 p-4 admin-action-card">
+            <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
+              <div>
+                <h3 className="h5 mb-2">All Properties</h3>
+                <p className="text-muted mb-0">
+                  Browse the full catalog, status history, and owner details.
+                </p>
+              </div>
+              <span className="badge bg-primary-soft text-primary">{summary.total} total</span>
+            </div>
+            <Link to="/admin/all-properties" className="btn btn-outline-primary mt-auto align-self-start">
+              Open list
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="card card-glass p-4">
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-2 mb-3">
           <div>
-            <h1 className="page-title mb-2">Admin Control Panel</h1>
-            <p className="page-subtitle">Monitor properties, pending approvals, users, and analytics.</p>
+            <h2 className="h4 mb-1">Recent Pending Verifications</h2>
+            <p className="text-muted mb-0">Most recent submissions awaiting admin review.</p>
           </div>
-          <div className="text-end">
-            <span className="badge bg-primary-soft text-primary py-2 px-3">{properties.length} properties</span>
-          </div>
+          <Link to="/admin/verification-requests" className="btn btn-sm btn-outline-primary">
+            View queue
+          </Link>
         </div>
 
-        {error && <div className="alert alert-danger">{error}</div>}
-        {statusMessage && <div className="alert alert-success">{statusMessage}</div>}
-
-        {activeSection === 'dashboard' && (
-          <>
-            <div className="stat-grid mb-4">
-              <div className="stat-card">
-                <div className="stat-card__title">Total properties</div>
-                <div className="stat-card__value">{dashboardStats.totalProperties}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card__title">Total owners</div>
-                <div className="stat-card__value">{dashboardStats.totalOwners}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card__title">Total tenants</div>
-                <div className="stat-card__value">{dashboardStats.totalTenants}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card__title">Total requests</div>
-                <div className="stat-card__value">{dashboardStats.totalRequests}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card__title">Approved requests</div>
-                <div className="stat-card__value">{dashboardStats.approvedRequests}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card__title">Rejected requests</div>
-                <div className="stat-card__value">{dashboardStats.rejectedRequests}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card__title">Pending requests</div>
-                <div className="stat-card__value">{dashboardStats.pendingRequests}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card__title">Available properties</div>
-                <div className="stat-card__value">{dashboardStats.availableProperties}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card__title">Occupied properties</div>
-                <div className="stat-card__value">{dashboardStats.occupiedProperties}</div>
-              </div>
-            </div>
-
-            <div className="row g-4">
-              <div className="col-lg-6">
-                <div className="card card-glass p-4">
-                  <h4 className="mb-3">Property status overview</h4>
-                  <div className="details-grid">
-                    <div className="details-card">
-                      <strong>Available</strong>
-                      <p>{statusCounts.available} listings</p>
-                    </div>
-                    <div className="details-card">
-                      <strong>Leased</strong>
-                      <p>{statusCounts.leased} listings</p>
-                    </div>
-                    <div className="details-card">
-                      <strong>Pending</strong>
-                      <p>{statusCounts.pending} listings</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="col-lg-6">
-                <div className="card card-glass p-4">
-                  <h4 className="mb-3">User counts</h4>
-                  <div className="details-grid">
-                    <div className="details-card">
-                      <strong>Owners</strong>
-                      <p>{dashboardStats.totalOwners}</p>
-                    </div>
-                    <div className="details-card">
-                      <strong>Tenants</strong>
-                      <p>{dashboardStats.totalTenants}</p>
-                    </div>
-                    <div className="details-card">
-                      <strong>Active requests</strong>
-                      <p>{dashboardStats.pendingRequests}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {activeSection === 'properties' && (
-          <div className="card card-glass p-4">
-            <h2 className="mb-3">All Properties</h2>
-            <p className="text-muted">Review every listing in the LeaseFlow platform.</p>
-            <div className="table-responsive">
-              <table className="table align-middle">
-                <thead>
-                  <tr>
-                    <th>Property</th>
-                    <th>Status</th>
-                    <th>Location</th>
-                    <th>Rent</th>
-                    <th>Actions</th>
+        <div className="table-responsive">
+          <table className="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Owner</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {verificationQueue.length ? (
+                verificationQueue.slice(0, 5).map((property) => (
+                  <tr key={property._id}>
+                    <td>{property.title}</td>
+                    <td>{property.ownerId?.name || property.ownerDetails?.name || 'Owner unavailable'}</td>
+                    <td>
+                      <span className="status-pill status-pill--pending">Pending</span>
+                    </td>
+                    <td>
+                      <Link to={`/admin/verification/${property._id}`} className="btn btn-sm btn-outline-primary">
+                        View details
+                      </Link>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {properties.length ? (
-                    properties.map((property) => {
-                      const title = property.title || property.name || 'Property';
-                      const status = property.status || 'Available';
-                      const location = property.address || property.location || 'N/A';
-                      const rent = property.rent || property.monthlyRent || 'N/A';
-                      return (
-                        <tr key={property._id || property.id || title}>
-                          <td>{title}</td>
-                          <td>{status}</td>
-                          <td>{location}</td>
-                          <td>{typeof rent === 'number' ? `$${rent}/mo` : rent}</td>
-                          <td>
-                            <button type="button" className="btn btn-sm btn-outline-primary me-2">View</button>
-                            <button type="button" className="btn btn-sm btn-outline-secondary">Edit</button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan="5" className="text-center text-muted">No properties available.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {activeSection === 'pending' && (
-          <div className="card card-glass p-4">
-            <h2 className="mb-3">Pending Properties</h2>
-            <p className="text-muted">Approve or reject the most recent pending listings.</p>
-            <div className="table-responsive">
-              <table className="table align-middle">
-                <thead>
-                  <tr>
-                    <th>Property</th>
-                    <th>Location</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingProperties.length ? (
-                    pendingProperties.map((property) => {
-                      const title = property.title || property.name || 'Property';
-                      const location = property.address || property.location || 'N/A';
-                      return (
-                        <tr key={property._id || property.id || title}>
-                          <td>{title}</td>
-                          <td>{location}</td>
-                          <td>{property.status || 'Pending'}</td>
-                          <td>
-                            <button type="button" className="btn btn-sm btn-outline-primary me-2">View</button>
-                            <button type="button" className="btn btn-sm btn-outline-success me-2" onClick={() => handleAdminAction(property._id || property.id, 'approve')}>Approve</button>
-                            <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => handleAdminAction(property._id || property.id, 'reject')}>Reject</button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan="4" className="text-center text-muted">No pending properties at the moment.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {activeSection === 'users' && (
-          <div className="card card-glass p-4">
-            <h2 className="mb-3">User Management</h2>
-            <div className="details-grid">
-              <div className="details-card">
-                <strong>All owners</strong>
-                {userSamples.owners.map((owner) => (
-                  <p key={owner.id} className="mb-1">{owner.name} · <span className="text-muted">{owner.email}</span></p>
-                ))}
-              </div>
-              <div className="details-card">
-                <strong>All tenants</strong>
-                {userSamples.tenants.map((tenant) => (
-                  <p key={tenant.id} className="mb-1">{tenant.name} · <span className="text-muted">{tenant.email}</span></p>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSection === 'analytics' && (
-          <div className="card card-glass p-4">
-            <h2 className="mb-3">Analytics</h2>
-            <div className="details-grid">
-              <div className="details-card">
-                <strong>Properties by status</strong>
-                <p>Available: {statusCounts.available}</p>
-                <p>Leased: {statusCounts.leased}</p>
-                <p>Pending: {statusCounts.pending}</p>
-              </div>
-              <div className="details-card">
-                <strong>Requests by status</strong>
-                <p>Approved: {dashboardStats.approvedRequests}</p>
-                <p>Rejected: {dashboardStats.rejectedRequests}</p>
-                <p>Pending: {dashboardStats.pendingRequests}</p>
-              </div>
-              <div className="details-card">
-                <strong>Owner count</strong>
-                <p>{dashboardStats.totalOwners}</p>
-              </div>
-              <div className="details-card">
-                <strong>Tenant count</strong>
-                <p>{dashboardStats.totalTenants}</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="text-center text-muted py-4">
+                    No pending verification requests.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

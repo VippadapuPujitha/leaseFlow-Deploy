@@ -1,12 +1,14 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const path = require("path");
 
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const requestRoutes = require("./routes/requestRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 
 dotenv.config();
@@ -22,6 +24,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Auth Routes
 app.use("/api/auth", authRoutes);
@@ -34,6 +37,9 @@ app.use("/api/requests", requestRoutes);
 
 // Property Routes
 app.use("/api/properties", propertyRoutes);
+
+// Admin Routes
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("LeaseFlow API Running");
