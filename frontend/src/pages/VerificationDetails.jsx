@@ -1,10 +1,46 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getAdminPropertyById, rejectProperty, verifyProperty } from '../services/adminService';
+import {
+  getAdminPropertyById,
+  notifyAdminDataChanged,
+  rejectProperty,
+  verifyProperty,
+} from '../services/adminService';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const normalizeStatus = (status) => {
   const value = String(status || 'pending').toLowerCase();
   return value === 'approved' ? 'verified' : value;
+};
+
+const getFileName = (value) => {
+  const rawValue = String(value || '');
+  const normalizedValue = rawValue.replace(/\\/g, '/');
+
+  return normalizedValue.split('/').filter(Boolean).pop() || '';
+};
+
+const resolvePublicUploadUrl = (value, fileType) => {
+  if (!value) {
+    return '';
+  }
+
+  if (/^(https?:)?\/\//i.test(value) || value.startsWith('data:')) {
+    return value;
+  }
+
+  const fileName = getFileName(value);
+
+  if (!fileName) {
+    return '';
+  }
+
+  if (fileType === 'image') {
+    return `${API_BASE_URL}/uploads/images/${fileName}`;
+  }
+
+  return `${API_BASE_URL}/uploads/documents/${fileName}`;
 };
 
 const isImageUrl = (url) => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url || '');
@@ -17,6 +53,8 @@ function VerificationDetails() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+  const [previewImageUrl, setPreviewImageUrl] = useState('');
+  const [previewImageLabel, setPreviewImageLabel] = useState('');
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -52,6 +90,7 @@ function VerificationDetails() {
       setProperty(response.data.property || property);
       setRejectionReason('');
       setMessage('Property verified successfully.');
+      notifyAdminDataChanged();
     } catch (approveError) {
       setError(approveError.response?.data?.message || 'Unable to approve property.');
     } finally {
@@ -73,6 +112,7 @@ function VerificationDetails() {
       const response = await rejectProperty(id, rejectionReason.trim());
       setProperty(response.data.property || property);
       setMessage('Property rejected successfully.');
+      notifyAdminDataChanged();
     } catch (rejectError) {
       setError(rejectError.response?.data?.message || 'Unable to reject property.');
     } finally {
@@ -99,10 +139,22 @@ function VerificationDetails() {
     return <div className="alert alert-warning">Property not found.</div>;
   }
 
-  const imageUrls = property.imageUrls || property.images || [];
-  const taxDocumentUrl = property.taxDocumentUrl;
-  const ownershipDocumentUrl = property.ownershipDocumentUrl;
+  const imageUrls = (property.imageUrls?.length ? property.imageUrls : property.images || [])
+    .map((image) => resolvePublicUploadUrl(image, 'image'))
+    .filter(Boolean);
+  const taxDocumentUrl = resolvePublicUploadUrl(
+    property.taxDocumentUrl || property.taxDocument || property.taxReceipt
+  , 'document');
+  const ownershipDocumentUrl = resolvePublicUploadUrl(
+    property.ownershipDocumentUrl || property.ownershipDocument || property.electricityBill
+  , 'document');
   const status = normalizeStatus(property.verificationStatus);
+  const statusLabel = status === 'verified' ? 'Verified' : status === 'rejected' ? 'Rejected' : 'Pending';
+
+  const openImagePreview = (url, label) => {
+    setPreviewImageUrl(url);
+    setPreviewImageLabel(label);
+  };
 
   return (
     <div className="admin-shell">
@@ -131,7 +183,13 @@ function VerificationDetails() {
             <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
               <div>
                 <h2 className="h4 mb-2">{property.title}</h2>
-                <span className={`status-pill status-pill--${status}`}>{status}</span>
+                <span className={`status-pill status-pill--${status}`}>{statusLabel}</span>
+                {status === 'verified' && <div className="text-success small mt-2">Verified status</div>}
+                {status === 'rejected' && (
+                  <div className="text-danger small mt-2">
+                    {property.rejectionReason || 'No rejection reason provided.'}
+                  </div>
+                )}
               </div>
               <div className="text-md-end">
                 <p className="mb-1"><strong>Owner:</strong> {ownerName}</p>
@@ -173,7 +231,13 @@ function VerificationDetails() {
                 {imageUrls.length ? (
                   imageUrls.map((url) => (
                     <div key={url} className="verification-image-card">
-                      <img src={url} alt={property.title} className="img-fluid" />
+                      <button
+                        type="button"
+                        className="border-0 bg-transparent p-0 w-100 text-start"
+                        onClick={() => openImagePreview(url, property.title)}
+                      >
+                        <img src={url} alt={property.title} className="img-fluid" />
+                      </button>
                     </div>
                   ))
                 ) : (
@@ -190,17 +254,19 @@ function VerificationDetails() {
             <div className="mb-3">
               <strong className="d-block mb-2">Tax Document</strong>
               {taxDocumentUrl ? (
-                isImageUrl(taxDocumentUrl) ? (
-                  <img src={taxDocumentUrl} alt="Tax document" className="img-fluid rounded-4 mb-2" />
-                ) : (
-                  <iframe src={taxDocumentUrl} title="Tax document" className="verification-document-frame mb-2" />
-                )
+                <div className="mb-2">
+                  {isImageUrl(taxDocumentUrl) ? (
+                    <img src={taxDocumentUrl} alt="Tax document" className="img-fluid rounded-4" />
+                  ) : (
+                    <iframe src={taxDocumentUrl} title="Tax document" className="verification-document-frame" />
+                  )}
+                </div>
               ) : (
                 <p className="text-muted mb-2">No tax document uploaded.</p>
               )}
               {taxDocumentUrl && (
-                <a href={taxDocumentUrl} target="_blank" rel="noreferrer">
-                  Open tax document
+                <a href={taxDocumentUrl} target="_blank" rel="noreferrer" className="btn btn-outline-primary btn-sm">
+                  View Tax Document
                 </a>
               )}
             </div>
@@ -208,17 +274,19 @@ function VerificationDetails() {
             <div>
               <strong className="d-block mb-2">Ownership Document</strong>
               {ownershipDocumentUrl ? (
-                isImageUrl(ownershipDocumentUrl) ? (
-                  <img src={ownershipDocumentUrl} alt="Ownership document" className="img-fluid rounded-4 mb-2" />
-                ) : (
-                  <iframe src={ownershipDocumentUrl} title="Ownership document" className="verification-document-frame mb-2" />
-                )
+                <div className="mb-2">
+                  {isImageUrl(ownershipDocumentUrl) ? (
+                    <img src={ownershipDocumentUrl} alt="Ownership document" className="img-fluid rounded-4" />
+                  ) : (
+                    <iframe src={ownershipDocumentUrl} title="Ownership document" className="verification-document-frame" />
+                  )}
+                </div>
               ) : (
                 <p className="text-muted mb-2">No ownership document uploaded.</p>
               )}
               {ownershipDocumentUrl && (
-                <a href={ownershipDocumentUrl} target="_blank" rel="noreferrer">
-                  Open ownership document
+                <a href={ownershipDocumentUrl} target="_blank" rel="noreferrer" className="btn btn-outline-primary btn-sm">
+                  View Ownership Document
                 </a>
               )}
             </div>
@@ -250,6 +318,22 @@ function VerificationDetails() {
           </div>
         </div>
       </div>
+
+      {previewImageUrl && (
+        <div className="modal d-block" tabIndex="-1" role="dialog" aria-modal="true" onClick={() => setPreviewImageUrl('')}>
+          <div className="modal-dialog modal-lg modal-dialog-centered" role="document" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">{previewImageLabel || 'Image preview'}</h5>
+                <button type="button" className="btn-close" aria-label="Close" onClick={() => setPreviewImageUrl('')} />
+              </div>
+              <div className="modal-body text-center">
+                <img src={previewImageUrl} alt={previewImageLabel || 'Property preview'} className="img-fluid rounded-4" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

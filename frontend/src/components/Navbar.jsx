@@ -53,13 +53,7 @@ function Navbar() {
       </li>
 
       <li className="nav-item">
-        <NavLink className="nav-link" to="/admin/verification-requests">
-          Verification Queue
-        </NavLink>
-      </li>
-
-      <li className="nav-item">
-        <NavLink className="nav-link" to="/admin/all-properties">
+        <NavLink className="nav-link" to="/properties">
           All Properties
         </NavLink>
       </li>

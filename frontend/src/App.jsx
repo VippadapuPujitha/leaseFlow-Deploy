@@ -11,6 +11,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import VerificationRequests from './pages/VerificationRequests';
 import AllProperties from './pages/AllProperties';
 import VerificationDetails from './pages/VerificationDetails';
+import VerifiedProperties from './pages/VerifiedProperties';
+import RejectedProperties from './pages/RejectedProperties';
 
 import PropertyList from './pages/PropertyList';
 import PropertyDetail from './pages/PropertyDetail';
@@ -108,6 +110,24 @@ function App() {
             element={
               <ProtectedRoute roles={['admin']}>
                 <AllProperties />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/verified-properties"
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <VerifiedProperties />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/rejected-properties"
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <RejectedProperties />
               </ProtectedRoute>
             }
           />
