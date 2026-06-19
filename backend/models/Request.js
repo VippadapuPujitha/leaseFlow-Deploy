@@ -19,6 +19,10 @@ const requestSchema = new mongoose.Schema(
       enum: ["pending", "accepted", "rejected","withdrawn"],
       default: "pending",
     },
+    owner: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User"
+},
     contactShared: {
       type: Boolean,
       default: false,

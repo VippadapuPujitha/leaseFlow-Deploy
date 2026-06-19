@@ -10,35 +10,30 @@ const createProperty = async (req, res) => {
     const images = req.files?.images?.map(file => file.path) || [];
 
     const property = await Property.create({
-      title: req.body.title,
-      address: req.body.address,
-      rent: req.body.rent,
-      propertyType: req.body.propertyType,
-      description: req.body.description,
+  title: req.body.title,
+  address: req.body.address,
+  rent: req.body.rent,
+  propertyType: req.body.propertyType,
+  description: req.body.description,
+  latitude: req.body.latitude,
+  longitude: req.body.longitude,
 
-      // Maps Coordinates
-      latitude: req.body.latitude,
-      longitude: req.body.longitude,
+  images,
 
-      images,
+  taxReceipt: req.files?.taxReceipt?.[0]?.path || "",
+  aadhaarPan: req.files?.aadhaarPan?.[0]?.path || "",
+  electricityBill: req.files?.electricityBill?.[0]?.path || "",
 
-      // Existing Documents
-      taxReceipt: req.files?.taxReceipt?.[0]?.path || "",
-      aadhaarPan: req.files?.aadhaarPan?.[0]?.path || "",
-      electricityBill: req.files?.electricityBill?.[0]?.path || "",
+  taxDocument: req.files?.taxDocument?.[0]?.path || "",
+  ownershipDocument: req.files?.ownershipDocument?.[0]?.path || "",
 
-      // New Documents
-      taxDocument: req.files?.taxDocument?.[0]?.path || "",
-      ownershipDocument: req.files?.ownershipDocument?.[0]?.path || "",
+  ownerId: req.user.id,
 
-      ownerId: req.body.ownerId,
-
-      // New Status Fields
-      verificationStatus: "pending",
-      rentalStatus: "available",
-      isHidden: false
-    });
-
+  verificationStatus: "not_requested",
+  rentalStatus: "available",
+  isHidden: false
+});
+    console.log("PROPERTY CREATED:", property);
     res.status(201).json({
       success: true,
       property
@@ -96,7 +91,7 @@ const getAllProperties = async (req, res) => {
 
 const getPendingProperties = async (req, res) => {
   try {
-    const properties = await Property.find({ status: "PENDING" });
+    const properties = await Property.find({ verificationStatus: "pending" });
 
     res.status(200).json({
       success: true,
@@ -142,13 +137,8 @@ const getPropertyById = async (req, res) => {
 
 const updateProperty = async (req, res) => {
   try {
-    const property = await Property.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true
-      }
+    const property = await Property.findById(
+      req.params.id
     );
 
     if (!property) {
@@ -157,6 +147,12 @@ const updateProperty = async (req, res) => {
         message: "Property not found"
       });
     }
+    if (property.ownerId.toString() !== req.user.id) {
+  return res.status(403).json({
+    success: false,
+    message: "You can delete only your own property"
+  });
+}
 
     res.status(200).json({
       success: true,
@@ -180,6 +176,12 @@ const deleteProperty = async (req, res) => {
         message: "Property not found"
       });
     }
+    if (property.ownerId.toString() !== req.user.id) {
+  return res.status(403).json({
+    success: false,
+    message: "You can delete only your own property"
+  });
+}
 
     await property.deleteOne();
 
@@ -197,6 +199,12 @@ const deleteProperty = async (req, res) => {
 
 const approveProperty = async (req, res) => {
   try {
+    if (req.user.role !== "admin") {
+  return res.status(403).json({
+    success: false,
+    message: "Only admin can approve properties"
+  });
+}
     const property = await Property.findById(req.params.id);
 
     if (!property) {
@@ -205,10 +213,15 @@ const approveProperty = async (req, res) => {
         message: "Property not found"
       });
     }
-
+    if (property.verificationStatus === "verified") {
+  return res.status(400).json({
+    success: false,
+    message: "Property is already verified"
+  });
+}
     property.status = "ACTIVE";
-    property.verificationStatus = "approved";
-
+    property.verificationStatus = "verified";
+    properrty.rejectionReason="";
     await property.save();
 
     res.status(200).json({
@@ -225,9 +238,13 @@ const approveProperty = async (req, res) => {
 };
 const getOwnerProperties = async (req, res) => {
   try {
-    const { ownerId } = req.params;
+    console.log("Logged in user:", req.user.id);
 
-    const properties = await Property.find({ ownerId });
+    const properties = await Property.find({
+      ownerId: req.user.id
+    });
+
+    console.log("Properties found:", properties.length);
 
     res.status(200).json({
       success: true,
@@ -251,14 +268,32 @@ const finalizeRental = async (req, res) => {
         message: "Property not found"
       });
     }
-
-    property.rentalStatus = "rented";
-
+    if (property.ownerId.toString() !== req.user.id) {
+  return res.status(403).json({
+    success: false,
+    message: "You can finalize only your own property"
+  });
+}
+if (property.rentalStatus !== "available") {
+  return res.status(400).json({
+    success: false,
+    message: "Property is already occupied"
+  });
+}
+if (property.verificationStatus !== "verified") {
+  return res.status(400).json({
+    success: false,
+    message: "Only verified properties can be finalized"
+  });
+}
+    property.rentalStatus = "occupied";
+    property.isHidden = true;
+    property.status="LOCKED";
     await property.save();
 
     res.status(200).json({
       success: true,
-      message: "Property marked as rented",
+      message: "Property marked as occupied",
       property
     });
   } catch (error) {
@@ -278,7 +313,18 @@ const togglePropertyVisibility = async (req, res) => {
         message: "Property not found"
       });
     }
-
+    if (property.ownerId.toString() !== req.user.id) {
+  return res.status(403).json({
+    success: false,
+    message: "You can modify visibility only for your own property"
+  });
+}
+if (property.rentalStatus === "occupied") {
+  return res.status(400).json({
+    success: false,
+    message: "Occupied properties cannot change visibility"
+  });
+}
     property.isHidden = !property.isHidden;
 
     await property.save();
@@ -299,6 +345,12 @@ const togglePropertyVisibility = async (req, res) => {
 };
 const rejectProperty = async (req, res) => {
   try {
+    if (req.user.role !== "admin") {
+  return res.status(403).json({
+    success: false,
+    message: "Only admin can reject properties"
+  });
+}
     const property = await Property.findById(req.params.id);
 
     if (!property) {
@@ -307,9 +359,25 @@ const rejectProperty = async (req, res) => {
         message: "Property not found"
       });
     }
-
+    if (property.verificationStatus === "rejected") {
+  return res.status(400).json({
+    success: false,
+    message: "Property is already rejected"
+  });
+}
     property.status = "REJECTED";
     property.verificationStatus = "rejected";
+    const { rejectionReason } = req.body;
+if (!rejectionReason) {
+  return res.status(400).json({
+    success: false,
+    message: "Rejection reason is required"
+  });
+}
+
+property.status = "REJECTED";
+property.verificationStatus = "rejected";
+property.rejectionReason = rejectionReason;
     property.rejectionReason = req.body.rejectionReason || "";
 
     await property.save();
@@ -336,7 +404,31 @@ const requestVerification = async (req, res) => {
         message: "Property not found"
       });
     }
+    if (!property.taxDocument || !property.ownershipDocument) {
+  return res.status(400).json({
+    success: false,
+    message: "Upload Tax Document and Ownership Document before requesting verification"
+  });
+}
+if (property.verificationStatus === "pending") {
+  return res.status(400).json({
+    success: false,
+    message: "Verification request is already pending"
+  });
+}
 
+if (property.verificationStatus === "verified") {
+  return res.status(400).json({
+    success: false,
+    message: "Property is already verified"
+  });
+}
+  if (property.ownerId.toString() !== req.user.id) {
+  return res.status(403).json({
+    success: false,
+    message: "You can request verification only for your own property"
+  });
+}
     property.verificationStatus = "pending";
     property.rejectionReason = "";
 
@@ -357,7 +449,6 @@ const requestVerification = async (req, res) => {
 const getAvailableProperties = async (req, res) => {
   try {
     const properties = await Property.find({
-      status: "ACTIVE",
       rentalStatus: "available",
       isHidden: false
     });
@@ -380,7 +471,6 @@ const searchProperties = async (req, res) => {
     const { propertyType, maxRent, location } = req.query;
 
     let filter = {
-      status: "ACTIVE",
       rentalStatus: "available",
       isHidden: false
     };
@@ -416,7 +506,7 @@ const searchProperties = async (req, res) => {
 };
 const getOwnerStats = async (req, res) => {
   try {
-    const { ownerId } = req.params;
+    const  ownerId  = req.user.id;
 
     const totalProperties = await Property.countDocuments({ ownerId });
 
@@ -432,7 +522,7 @@ const getOwnerStats = async (req, res) => {
 
     const rentedProperties = await Property.countDocuments({
       ownerId,
-      rentalStatus: "rented"
+      rentalStatus: "occupied"
     });
 
     const hiddenProperties = await Property.countDocuments({
@@ -446,7 +536,7 @@ const getOwnerStats = async (req, res) => {
         totalProperties,
         activeProperties,
         pendingProperties,
-        rentedProperties,
+        occupiedProperties,
         hiddenProperties
       }
     });

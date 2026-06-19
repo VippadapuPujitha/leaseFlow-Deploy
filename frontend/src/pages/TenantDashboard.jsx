@@ -14,9 +14,9 @@ const tenantNavigation = [
 ];
 
 const statusLabels = {
-  Pending: '🟡 Pending',
-  Approved: '🟢 Approved',
-  Rejected: '🔴 Rejected',
+  pending: '🟡 Pending',
+  accepted: '🟢 Approved',
+  rejected: '🔴 Rejected',
 };
 
 function TenantDashboard() {
@@ -80,7 +80,17 @@ function TenantDashboard() {
     console.log(error);
   }
 };
+const fetchMyRequests = async () => {
+  try {
+    const response = await api.get("/api/requests/my-requests");
 
+    console.log("MY REQUESTS:", response.data);
+
+    setRequests(response.data.requests || []);
+  } catch (error) {
+    console.log(error);
+  }
+};
   useEffect(() => {
   const fetchProperties = async () => {
     setLoading(true);
@@ -100,6 +110,7 @@ function TenantDashboard() {
   fetchProperties();
   fetchSavedProperties();
   fetchProfile();
+  fetchMyRequests();
 
 }, []);
 
@@ -120,12 +131,16 @@ function TenantDashboard() {
   }, [properties, search, location, propertyType, rentMin, rentMax]);
 
   const summary = useMemo(() => ({
-    totalProperties: properties.length,
-    appliedRequests: requests.length,
-    approvedRequests: requests.filter((item) => item.status === 'Approved').length,
-    rejectedRequests: requests.filter((item) => item.status === 'Rejected').length,
-    activeRentals: rentals.length,
-  }), [properties.length, requests, rentals.length]);
+  totalProperties: properties.length,
+  appliedRequests: requests.length,
+  approvedRequests: requests.filter(
+    (item) => item.status === "accepted"
+  ).length,
+  rejectedRequests: requests.filter(
+    (item) => item.status === "rejected"
+  ).length,
+  activeRentals: rentals.length,
+}), [properties.length, requests, rentals.length]);
 
     const handleSaveProperty = async (propertyId) => {
   try {
@@ -138,24 +153,30 @@ function TenantDashboard() {
 };
 
   const handleSendRequest = async (property) => {
-    try {
-      const payload = { property: property._id || property.id };
-      const response = await api.post('/api/requests/send', payload);
-      const request = response.data.request || response.data;
-      setRequests((prev) => [
-        ...prev,
-        {
-          id: request._id || request.id || `REQ-${prev.length + 100}`,
-          propertyName: property.title || property.name || 'Property',
-          ownerName: property.ownerName || property.owner || 'Owner',
-          date: new Date().toISOString().split('T')[0],
-          status: 'Pending',
-        },
-      ]);
-    } catch (err) {
-      setError('Unable to submit request.');
-    }
-  };
+  try {
+    const payload = {
+      propertyId: property._id || property.id
+    };
+
+    const response = await api.post('/api/requests/send', payload);
+
+    const request = response.data.request || response.data;
+
+    setRequests((prev) => [
+      ...prev,
+      {
+        id: request._id || request.id || `REQ-${prev.length + 100}`,
+        propertyName: property.title || property.name || 'Property',
+        ownerName: property.ownerName || property.owner || 'Owner',
+        date: new Date().toISOString().split('T')[0],
+        status: 'Pending',
+      },
+    ]);
+  } catch (err) {
+    console.log(err.response?.data);
+    setError('Unable to submit request.');
+  }
+};
 
   const handleProfileChange = (field, value) => {
     setProfileForm((prev) => ({ ...prev, [field]: value }));

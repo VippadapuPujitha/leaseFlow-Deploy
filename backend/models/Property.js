@@ -67,8 +67,8 @@ const propertySchema = new mongoose.Schema(
     // Verification Tracking
     verificationStatus: {
         type: String,
-        enum: ["pending", "approved", "rejected"],
-        default: "pending"
+        enum: ["not_requested", "pending", "verified", "rejected"],
+        default: "not_requested"
     },
 
     rejectionReason: {
@@ -79,7 +79,7 @@ const propertySchema = new mongoose.Schema(
     // Rental Status
     rentalStatus: {
         type: String,
-        enum: ["available", "rented"],
+        enum: ["available", "occupied"],
         default: "available"
     },
 

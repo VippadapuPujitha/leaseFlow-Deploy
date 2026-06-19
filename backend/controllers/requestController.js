@@ -1,173 +1,119 @@
 const Request = require("../models/Request");
 const Property = require("../models/Property");
 
-// Send Rental Request
+/* ================= SEND REQUEST ================= */
 exports.sendRentalRequest = async (req, res) => {
   try {
-
     const { propertyId } = req.body;
 
-    // Check property exists
     const property = await Property.findById(propertyId);
+    const existingRequest = await Request.findOne({
+  tenant: req.user.id,
+  property: propertyId,
+  status: "pending"
+});
+
+if (existingRequest) {
+  return res.status(400).json({
+    message: "You already sent a request for this property"
+  });
+}
 
     if (!property) {
-      return res.status(404).json({
-        success: false,
-        message: "Property not found"
-      });
+      return res.status(404).json({ message: "Property not found" });
     }
 
-    // Check property is ACTIVE
-    if (property.status !== "ACTIVE") {
-      return res.status(400).json({
-        success: false,
-        message: "Property is not available"
-      });
-    }
-
-    // Create request
     const request = await Request.create({
       tenant: req.user.id,
-      property: propertyId
+      property: propertyId,
+      owner: property.ownerId,   // ✅ IMPORTANT FIX
+      status: "pending",
+      contactShared: false
     });
 
     res.status(201).json({
       success: true,
-      message: "Rental request sent successfully",
       request
     });
 
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
-  }
+  } catch (err) {
+  console.log("REQUEST ERROR:", err.response?.data);
+  setError(
+    err.response?.data?.message || "Unable to submit request."
+  );
+}
 };
-// Withdraw Rental Request
-exports.withdrawRequest = async (req, res) => {
-  try {
-    const request = await Request.findById(req.params.id);
 
-    if (!request) {
-      return res.status(404).json({
-        success: false,
-        message: "Request not found"
-      });
-    }
-
-    // Only pending requests can be withdrawn
-    if (request.status !== "pending") {
-      return res.status(400).json({
-        success: false,
-        message: "Only pending requests can be withdrawn"
-      });
-    }
-
-    request.status = "withdrawn";
-    await request.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Request withdrawn successfully",
-      request
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
-// View My Requests
+/* ================= VIEW MY REQUESTS ================= */
 exports.viewMyRequests = async (req, res) => {
   try {
-
     const requests = await Request.find({
       tenant: req.user.id
-    })
-    .populate("property");
+    }).populate("property");
 
-    res.status(200).json({
+    res.json({
       success: true,
-      count: requests.length,
       requests
     });
 
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
 };
-// View Requests For A Property
+
+/* ================= VIEW PROPERTY REQUESTS ================= */
 exports.viewPropertyRequests = async (req, res) => {
   try {
-
     const requests = await Request.find({
       property: req.params.propertyId
     })
-    .populate("tenant", "name email")
-    .populate("property");
+      .populate("tenant", "name email")
+      .populate("property");
 
-    res.status(200).json({
+    res.json({
       success: true,
-      count: requests.length,
       requests
     });
 
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
 };
-// Accept Request
+
+/* ================= ACCEPT REQUEST ================= */
 exports.acceptRequest = async (req, res) => {
   try {
-
     const request = await Request.findById(req.params.id);
 
     if (!request) {
-      return res.status(404).json({
-        success: false,
-        message: "Request not found"
-      });
+      return res.status(404).json({ message: "Request not found" });
     }
 
+    // 1. Update request
     request.status = "accepted";
     request.contactShared = true;
-
     await request.save();
 
-    res.status(200).json({
+    // 2. Update property status (IMPORTANT)
+    await Property.findByIdAndUpdate(request.property, {
+      rentalStatus: "rented",
+      status: "LOCKED"
+    });
+
+    res.json({
       success: true,
-      message: "Request accepted successfully",
+      message: "Request accepted and property locked",
       request
     });
 
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-
+    res.status(500).json({ message: error.message });
   }
 };
-// Reject Request
+
+/* ================= REJECT REQUEST ================= */
 exports.rejectRequest = async (req, res) => {
   try {
-
     const request = await Request.findById(req.params.id);
 
     if (!request) {
@@ -181,18 +127,55 @@ exports.rejectRequest = async (req, res) => {
 
     await request.save();
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "Request rejected successfully",
+      message: "Request rejected",
       request
     });
 
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+exports.getOwnerRequests = async (req, res) => {
+  try {
+    const ownerId = req.user.id;
 
-    res.status(500).json({
-      success: false,
-      message: error.message
+    const requests = await Request.find({
+      owner: ownerId   // ✅ FILTER BY OWNER
+    })
+      .populate("tenant", "name email")
+      .populate("property");
+
+    res.json({
+      success: true,
+      requests
     });
 
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+exports.withdrawRequest = async (req, res) => {
+  try {
+    const request = await Request.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found"
+      });
+    }
+
+    await request.deleteOne();
+
+    res.json({
+      success: true,
+      message: "Request withdrawn successfully"
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
   }
 };

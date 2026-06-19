@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const authMiddleware = require("../middleware/authMiddleware");
 const upload = require("../config/multer");
 
 const {
@@ -24,7 +24,7 @@ const {
 
 /* ---------------- CREATE PROPERTY ---------------- */
 router.post(
-  "/",
+  "/",authMiddleware,
   upload.fields([
     { name: "images", maxCount: 10 },
     { name: "taxReceipt", maxCount: 1 },
@@ -42,26 +42,26 @@ router.get("/", getAllProperties);
 router.get("/pending", getPendingProperties);
 router.get("/available", getAvailableProperties);
 router.get("/search/filter", searchProperties);
-router.get("/owner/:ownerId", getOwnerProperties);
-router.get("/owner-stats/:ownerId", getOwnerStats);
+router.get("/owner/:ownerId", authMiddleware,getOwnerProperties);
+router.get("/owner-stats/:ownerId",authMiddleware, getOwnerStats);
 router.get("/:id", getPropertyById);
 
 /* ---------------- UPDATE ---------------- */
-router.put("/:id", updateProperty);
+router.put("/:id", authMiddleware,updateProperty);
 
 /* ---------------- DELETE ---------------- */
-router.delete("/:id", deleteProperty);
+router.delete("/:id", authMiddleware, deleteProperty);
 
 /* ---------------- ADMIN ---------------- */
-router.put("/approve/:id", approveProperty);
-router.put("/reject/:id", rejectProperty);
+router.put("/approve/:id", authMiddleware,approveProperty);
+router.put("/reject/:id", authMiddleware,rejectProperty);
 
 /* ---------------- RENTAL ---------------- */
-router.put("/finalize-rental/:id", finalizeRental);
+router.put("/finalize-rental/:id", authMiddleware, finalizeRental);
 
 /* ---------------- VISIBILITY ---------------- */
-router.put("/toggle-visibility/:id", togglePropertyVisibility);
+router.put("/toggle-visibility/:id", authMiddleware,togglePropertyVisibility);
 
 /* ---------------- VERIFICATION ---------------- */
-router.put("/request-verification/:id", requestVerification);
+router.put("/request-verification/:id", authMiddleware, requestVerification);
 module.exports = router;
