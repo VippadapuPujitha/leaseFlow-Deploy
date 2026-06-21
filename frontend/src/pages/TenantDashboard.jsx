@@ -86,6 +86,19 @@ setRentals(acceptedRentals);
     console.log(error);
   }
 };
+
+const handleWithdraw = async (requestId) => {
+  try {
+    await api.patch(`/api/requests/withdraw/${requestId}`);
+
+    setRequests((prev) =>
+      prev.filter((r) => r._id !== requestId)
+    );
+  } catch (error) {
+    console.log(error);
+  }
+};
+
   useEffect(() => {
   const fetchProperties = async () => {
     setLoading(true);
@@ -408,7 +421,18 @@ setRentals(acceptedRentals);
                         <td>{request.property?.title}</td>
 <td>{request.owner?.name}</td>
 <td>{new Date(request.createdAt).toLocaleDateString()}</td>
-                        <td>{statusLabels[request.status] || request.status}</td>
+                        <td>
+  {statusLabels[request.status] || request.status}
+
+  {request.status === "pending" && (
+    <button
+      className="btn btn-sm btn-danger ms-2"
+      onClick={() => handleWithdraw(request._id)}
+    >
+      Withdraw
+    </button>
+  )}
+</td>
                       </tr>
                     ))
                   ) : (
