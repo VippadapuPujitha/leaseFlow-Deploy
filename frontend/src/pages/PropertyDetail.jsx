@@ -159,7 +159,7 @@ console.log(property);
             </div>
                 <button
   className="btn btn-secondary mt-3"
-  onClick={() => navigate('/properties')}
+  onClick={() => navigate("/tenant-dashboard")}
 >
   Back to Browse Properties
 </button>

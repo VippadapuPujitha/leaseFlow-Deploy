@@ -98,7 +98,7 @@ exports.acceptRequest = async (req, res) => {
 
     // 2. Update property status (IMPORTANT)
     await Property.findByIdAndUpdate(request.property, {
-      rentalStatus: "rented",
+      rentalStatus: "occupied",
       status: "LOCKED"
     });
 

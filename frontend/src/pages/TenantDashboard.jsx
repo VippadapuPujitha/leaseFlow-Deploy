@@ -31,6 +31,7 @@ function TenantDashboard() {
   const [rentMin, setRentMin] = useState('');
   const [rentMax, setRentMax] = useState('');
   const [requests, setRequests] = useState([]);
+  const [rentals, setRentals] = useState([]);
   const [editingProfile, setEditingProfile] = useState(false);
   const [savedProperties, setSavedProperties] = useState([]);
   const [profileForm, setProfileForm] =
@@ -42,16 +43,6 @@ function TenantDashboard() {
   });
   const [profileMessage, setProfileMessage] = useState('');
   const [profileError, setProfileError] = useState('');
-  const [rentals] = useState([
-    {
-      id: 'RENT-001',
-      title: 'Urban Loft Apartment',
-      location: 'Downtown City Center',
-      rent: 2300,
-      owner: 'Luna Properties',
-      status: 'Active',
-    },
-  ]);
 
   const fetchSavedProperties = async () => {
     try {
@@ -87,6 +78,10 @@ const fetchMyRequests = async () => {
     console.log("MY REQUESTS:", response.data);
 
     setRequests(response.data.requests || []);
+    const acceptedRentals = (response.data.requests || [])
+  .filter((request) => request.status === "accepted");
+
+setRentals(acceptedRentals);
   } catch (error) {
     console.log(error);
   }
@@ -434,13 +429,28 @@ const fetchMyRequests = async () => {
             <div className="row g-4">
               {rentals.length ? (
                 rentals.map((rental) => (
-                  <div className="col-md-6" key={rental.id}>
+                  <div className="col-md-6" key={rental._id}>
                     <div className="details-card h-100">
-                      <h5>{rental.title}</h5>
-                      <p className="text-muted mb-2">{rental.location}</p>
-                      <p className="mb-2"><strong>Monthly Rent:</strong> ${rental.rent}</p>
-                      <p className="mb-2"><strong>Owner:</strong> {rental.owner}</p>
-                      <p><strong>Status:</strong> <span className="status-pill status-pill--success">{rental.status}</span></p>
+                      <h5>{rental.property?.title}</h5>
+
+<p className="text-muted mb-2">
+  {rental.property?.address}
+</p>
+
+<p className="mb-2">
+  <strong>Monthly Rent:</strong> ₹{rental.property?.rent}
+</p>
+
+<p className="mb-2">
+  <strong>Owner:</strong> {rental.owner?.name}
+</p>
+
+<p>
+  <strong>Status:</strong>
+  <span className="status-pill status-pill--success ms-2">
+    Active
+  </span>
+</p>
                     </div>
                   </div>
                 ))
