@@ -48,8 +48,10 @@ if (existingRequest) {
 exports.viewMyRequests = async (req, res) => {
   try {
     const requests = await Request.find({
-      tenant: req.user.id
-    }).populate("property");
+  tenant: req.user.id
+})
+.populate("property")
+.populate("owner", "name");
 
     res.json({
       success: true,

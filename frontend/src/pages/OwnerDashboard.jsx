@@ -488,19 +488,23 @@ if (files.idProof)
       {requests.map(r => (
         <div key={r._id} style={styles.card}>
           <p><strong>Tenant:</strong> {r.tenant?.name}</p>
-          <p><strong>Property:</strong> {r.property?.title}</p>
-          <p><strong>Status:</strong> {r.status}</p>
+<p><strong>Property:</strong> {r.property?.title}</p>
+<p><strong>Status:</strong> {r.status}</p>
 
-          <button onClick={() => handleAccept(r._id)}>
-            Accept
-          </button>
+{r.status === "pending" && (
+  <>
+    <button onClick={() => handleAccept(r._id)}>
+      Accept
+    </button>
 
-          <button
-            onClick={() => handleReject(r._id)}
-            style={{ marginLeft: '10px' }}
-          >
-            Reject
-          </button>
+    <button
+      onClick={() => handleReject(r._id)}
+      style={{ marginLeft: '10px' }}
+    >
+      Reject
+    </button>
+  </>
+)}
         </div>
       ))}
     </div>

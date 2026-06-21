@@ -409,10 +409,10 @@ const fetchMyRequests = async () => {
                 <tbody>
                   {requests.length ? (
                     requests.map((request) => (
-                      <tr key={request.id}>
-                        <td>{request.propertyName}</td>
-                        <td>{request.ownerName}</td>
-                        <td>{request.date}</td>
+                      <tr key={request._id}>
+                        <td>{request.property?.title}</td>
+<td>{request.owner?.name}</td>
+<td>{new Date(request.createdAt).toLocaleDateString()}</td>
                         <td>{statusLabels[request.status] || request.status}</td>
                       </tr>
                     ))
