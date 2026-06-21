@@ -12,6 +12,7 @@ const createProperty = async (req, res) => {
     const property = await Property.create({
   title: req.body.title,
   address: req.body.address,
+  city: req.body.city,
   rent: req.body.rent,
   propertyType: req.body.propertyType,
   description: req.body.description,
@@ -153,6 +154,9 @@ const updateProperty = async (req, res) => {
     message: "You can delete only your own property"
   });
 }
+Object.assign(property, req.body);
+
+await property.save();
 
     res.status(200).json({
       success: true,
@@ -221,7 +225,7 @@ const approveProperty = async (req, res) => {
 }
     property.status = "ACTIVE";
     property.verificationStatus = "verified";
-    properrty.rejectionReason="";
+    property.rejectionReason="";
     await property.save();
 
     res.status(200).json({
@@ -536,7 +540,7 @@ const getOwnerStats = async (req, res) => {
         totalProperties,
         activeProperties,
         pendingProperties,
-        occupiedProperties,
+        occupiedProperties: rentedProperties,
         hiddenProperties
       }
     });
