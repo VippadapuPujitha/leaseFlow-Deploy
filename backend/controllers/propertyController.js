@@ -16,6 +16,8 @@ const createProperty = async (req, res) => {
   rent: req.body.rent,
   propertyType: req.body.propertyType,
   description: req.body.description,
+  bedrooms: req.body.bedrooms,
+  bathrooms: req.body.bathrooms,
   latitude: req.body.latitude,
   longitude: req.body.longitude,
 

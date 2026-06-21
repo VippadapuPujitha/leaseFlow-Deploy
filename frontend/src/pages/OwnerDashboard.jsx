@@ -20,6 +20,8 @@ const initialForm = {
   description: '',
   latitude: '',
   longitude: '',
+  bedrooms: '',
+  bathrooms: '',
 };
 
 function OwnerDashboard() {
@@ -365,6 +367,24 @@ if (files.idProof)
                   value={form.longitude}
                   onChange={(e) => handleChange("longitude", e.target.value)} />
               </div>
+
+              <div style={styles.row}>
+  <input
+    style={styles.input}
+    type="number"
+    placeholder="Bedrooms"
+    value={form.bedrooms || ""}
+    onChange={(e) => handleChange("bedrooms", e.target.value)}
+  />
+
+  <input
+    style={styles.input}
+    type="number"
+    placeholder="Bathrooms"
+    value={form.bathrooms || ""}
+    onChange={(e) => handleChange("bathrooms", e.target.value)}
+  />
+</div>
 
               {/* FILES */}
               <div style={styles.row}>

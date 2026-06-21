@@ -31,6 +31,14 @@ const propertySchema = new mongoose.Schema(
         type: String,
         required: true
     },
+    bedrooms: {
+    type: Number,
+    default: 1
+},
+    bathrooms: {
+    type: Number,
+    default: 1
+},
 
     images: [
         {

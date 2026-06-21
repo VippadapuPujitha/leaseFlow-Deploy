@@ -73,6 +73,7 @@ function PropertyDetail() {
 console.log("Latitude:", property.latitude);
 console.log("Longitude:", property.longitude);
 console.log("Property:", property);
+console.log(property);
   return (
     <div className="mb-4">
 
@@ -86,9 +87,9 @@ console.log("Property:", property);
           {/* LEFT SIDE */}
           <div className="col-lg-7">
             <div className="property-card__media mb-4">
-              {property.image ? (
+              {property.images ?.length>0? (
                 <img
-                  src={property.image}
+                  src={`http://localhost:5000/uploads/images/${property.images[0].split("\\").pop()}`}
                   alt={title}
                   className="img-fluid rounded-4"
                 />
