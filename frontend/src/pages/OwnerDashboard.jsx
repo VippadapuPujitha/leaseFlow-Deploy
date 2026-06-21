@@ -490,6 +490,12 @@ if (files.idProof)
           <p><strong>Tenant:</strong> {r.tenant?.name}</p>
 <p><strong>Property:</strong> {r.property?.title}</p>
 <p><strong>Status:</strong> {r.status}</p>
+{r.contactShared && (
+  <>
+    <p><strong>Email:</strong> {r.tenant?.email}</p>
+    <p><strong>Phone:</strong> {r.tenant?.phone}</p>
+  </>
+)}
 
 {r.status === "pending" && (
   <>

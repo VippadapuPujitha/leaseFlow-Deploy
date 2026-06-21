@@ -51,7 +51,7 @@ exports.viewMyRequests = async (req, res) => {
   tenant: req.user.id
 })
 .populate("property")
-.populate("owner", "name");
+.populate("owner", "name email phone");
 
     res.json({
       success: true,
@@ -69,7 +69,7 @@ exports.viewPropertyRequests = async (req, res) => {
     const requests = await Request.find({
       property: req.params.propertyId
     })
-      .populate("tenant", "name email")
+      .populate("tenant", "name email phone")
       .populate("property");
 
     res.json({
@@ -146,7 +146,7 @@ exports.getOwnerRequests = async (req, res) => {
     const requests = await Request.find({
       owner: ownerId   // ✅ FILTER BY OWNER
     })
-      .populate("tenant", "name email")
+      .populate("tenant", "name email phone")
       .populate("property");
 
     res.json({
