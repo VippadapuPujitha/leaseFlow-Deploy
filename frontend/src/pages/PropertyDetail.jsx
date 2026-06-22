@@ -9,32 +9,59 @@ function PropertyDetail() {
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [requested, setRequested] = useState(false);
 
   const [nearbyPlaces, setNearbyPlaces] = useState([]);
   const [loadingPlaces, setLoadingPlaces] = useState(false);
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  useEffect(() => {
-    const fetchProperty = async () => {
-      try {
-        const response = await api.get(`/api/properties/${id}`);
-        const data = response.data;
-        setProperty(data.property || data || null);
-      } catch (err) {
-        setError('Unable to load property details.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleSendRequest = async () => {
+  try {
+    await api.post("/api/requests/send", {
+      propertyId: property._id,
+    });
 
-    fetchProperty();
-  }, [id]);
+    setRequested(true);
+  } catch (error) {
+    alert(
+      error.response?.data?.message ||
+      "Unable to send request."
+    );
+  }
+};
+useEffect(() => {
+  const fetchProperty = async () => {
+    try {
+      const response = await api.get(`/api/properties/${id}`);
+      const data = response.data;
+      const propertyData = data.property || data || null;
+
+      setProperty(propertyData);
+
+      const requestResponse = await api.get("/api/requests/my-requests");
+
+      const alreadyRequested = requestResponse.data.requests?.some(
+        (request) => request.property?._id === propertyData?._id
+      );
+
+      setRequested(alreadyRequested);
+    } catch (err) {
+      setError("Unable to load property details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProperty();
+}, [id]);
 
   if (loading) return <div className="text-center py-5">Loading property details...</div>;
   if (error) return <div className="alert alert-danger">{error}</div>;
   if (!property) return <div className="alert alert-warning">No property found.</div>;
 
   const title = property.title || property.name || 'Property details';
-  const subtitle = property.location || property.address || 'Location unavailable';
+  const subtitle =
+  `${property.address || ""}${property.city ? `, ${property.city}` : ""}` ||
+  "Location unavailable";
 
   const fetchNearbyPlaces = async (type) => {
     if (!property.latitude || !property.longitude) return;
@@ -74,6 +101,7 @@ console.log("Latitude:", property.latitude);
 console.log("Longitude:", property.longitude);
 console.log("Property:", property);
 console.log(property);
+console.log("PROPERTY DETAILS:", property);
   return (
     <div className="mb-4">
 
@@ -139,13 +167,12 @@ console.log(property);
             </div>
 
             <div className="details-card mb-3">
-              <strong>Area</strong>
-              <p>{property.area ? `${property.area} sqft` : 'N/A'}</p>
-            </div>
-
-            <div className="details-card mb-3">
               <strong>Available from</strong>
-              <p>{property.availableDate || 'Immediate'}</p>
+              <p>
+  {property.availableFrom
+    ? new Date(property.availableFrom).toLocaleDateString()
+    : 'Immediate'}
+</p>
             </div>
 
             <div className="details-card mb-3">
@@ -157,6 +184,14 @@ console.log(property);
               <strong>Rental Status</strong>
               <p>{property.rentalStatus || 'Available'}</p>
             </div>
+            <button
+  className="btn btn-primary mt-3 me-2"
+  onClick={handleSendRequest}
+  disabled={requested}
+>
+  {requested ? "Requested ✅" : "Request Property"}
+</button>
+            
                 <button
   className="btn btn-secondary mt-3"
   onClick={() => navigate("/tenant-dashboard")}

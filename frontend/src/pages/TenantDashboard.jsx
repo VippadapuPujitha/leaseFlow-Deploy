@@ -124,17 +124,31 @@ const handleWithdraw = async (requestId) => {
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {
+      console.log("PROPERTY:", property);
       const title = (property.title || property.name || '').toLowerCase();
       const address = (property.address || property.location || '').toLowerCase();
+
+const city = (property.city || '').toLowerCase();
+
+const matchesLocation =
+  !location ||
+  address.includes(location.toLowerCase()) ||
+  city.includes(location.toLowerCase());
       const type = (property.propertyType || property.type || '').toLowerCase();
       const rent = Number(property.rent || property.monthlyRent || 0);
+      const isLocked = property.status === "LOCKED";
       const searchText = search.toLowerCase();
       const matchesSearch = title.includes(searchText) || address.includes(searchText) || property._id?.includes(searchText) || property.id?.includes(searchText);
-      const matchesLocation = !location || address.includes(location.toLowerCase());
+      
       const matchesType = !propertyType || type.includes(propertyType.toLowerCase());
       const matchesMin = !rentMin || rent >= Number(rentMin);
       const matchesMax = !rentMax || rent <= Number(rentMax);
-      return matchesSearch && matchesLocation && matchesType && matchesMin && matchesMax;
+      return !isLocked &&
+       matchesSearch &&
+       matchesLocation &&
+       matchesType &&
+       matchesMin &&
+       matchesMax;
     });
   }, [properties, search, location, propertyType, rentMin, rentMax]);
 
@@ -312,7 +326,18 @@ const handleWithdraw = async (requestId) => {
                 </div>
                 <div className="col-md-4">
                   <label className="form-label">Property Type</label>
-                  <input className="form-control" value={propertyType} onChange={(e) => setPropertyType(e.target.value)} placeholder="Apartment, House, Condo" />
+                  <select
+  className="form-select"
+  value={propertyType}
+  onChange={(e) => setPropertyType(e.target.value)}
+>
+  <option value="">All Types</option>
+  <option value="Apartment">Apartment</option>
+  <option value="House">House</option>
+  <option value="Villa">Villa</option>
+  <option value="Office">Office</option>
+  <option value="Shop">Shop</option>
+</select>
                 </div>
                 <div className="col-md-2">
                   <label className="form-label">Rent min</label>
@@ -324,7 +349,7 @@ const handleWithdraw = async (requestId) => {
                 </div>
                 <div className="col-12">
                   <label className="form-label">Search</label>
-                  <input className="form-control" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by Property ID or name" />
+                  <input className="form-control" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by Property Name" />
                 </div>
               </div>
             </div>
@@ -336,7 +361,10 @@ const handleWithdraw = async (requestId) => {
                 {filteredProperties.length ? (
                   filteredProperties.map((property) => {
                     const title = property.title || property.name || 'Property';
-                    const address = property.address || property.location || 'Location not available';
+                    const address =
+  `${property.address || property.location || ""}${
+    property.city ? `, ${property.city}` : ""
+  }` || "Location not available";
                     const rent = property.rent || property.monthlyRent || 'N/A';
                     const description = property.description || 'A modern rental with great amenities.';
                     const status = property.status || 'Available';
@@ -348,7 +376,7 @@ const handleWithdraw = async (requestId) => {
                           <p className="text-muted mb-2">{address}</p>
                           <p className="text-muted mb-3">{description.slice(0, 110)}</p>
                           <div className="property-card__meta">
-                            <span>{typeof rent === 'number' ? `$${rent}/mo` : rent}</span>
+                            <span>{typeof rent === 'number' ? `₹${rent}/mo` : rent}</span>
                             <span className="property-badge">{status}</span>
                           </div>
                         </div>

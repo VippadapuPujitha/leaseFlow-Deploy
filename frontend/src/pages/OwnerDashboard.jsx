@@ -22,6 +22,7 @@ const initialForm = {
   longitude: '',
   bedrooms: '',
   bathrooms: '',
+  availableFrom: '',
 };
 
 function OwnerDashboard() {
@@ -385,6 +386,16 @@ if (files.idProof)
     onChange={(e) => handleChange("bathrooms", e.target.value)}
   />
 </div>
+<div style={styles.row}>
+  <input
+    style={styles.input}
+    type="date"
+    value={form.availableFrom || ""}
+    onChange={(e) =>
+      handleChange("availableFrom", e.target.value)
+    }
+  />
+</div>
 
               {/* FILES */}
               <div style={styles.row}>
@@ -448,15 +459,18 @@ if (files.idProof)
               setSelectedProperty(p);
 
               setForm({
-                title: p.title || "",
-                propertyType: p.propertyType || "Apartment",
-                address: p.address || "",
-                city: p.city || "",
-                rent: p.rent || "",
-                description: p.description || "",
-                latitude: p.latitude || "",
-                longitude: p.longitude || ""
-              });
+  title: p.title || "",
+  propertyType: p.propertyType || "Apartment",
+  address: p.address || "",
+  city: p.city || "",
+  rent: p.rent || "",
+  description: p.description || "",
+  latitude: p.latitude || "",
+  longitude: p.longitude || "",
+  bedrooms: p.bedrooms || "",
+  bathrooms: p.bathrooms || "",
+  availableFrom: p.availableFrom || "",
+});
 
               setActiveSection("add");
             }}
