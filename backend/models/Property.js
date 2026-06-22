@@ -39,6 +39,9 @@ const propertySchema = new mongoose.Schema(
     type: Number,
     default: 1
 },
+availableFrom: {
+    type: Date
+},
 
     images: [
         {
