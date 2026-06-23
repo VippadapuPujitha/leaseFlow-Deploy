@@ -4,7 +4,9 @@ import { getAdminProperties } from '../services/adminService';
 
 const normalizeVerificationStatus = (status) => {
   const value = String(status || 'pending').toLowerCase();
-  return value === 'approved' ? 'verified' : value;
+  if (value === 'approved') return 'verified';
+  if (value === 'not_requested') return 'pending';
+  return value;
 };
 
 function VerifiedProperties() {
