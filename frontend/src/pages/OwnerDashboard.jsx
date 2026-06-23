@@ -22,6 +22,7 @@ const initialForm = {
   longitude: '',
   bedrooms: '',
   bathrooms: '',
+  squareFeet: '',
   availableFrom: '',
 };
 
@@ -110,6 +111,7 @@ const [errorMessage, setErrorMessage] = useState('');
 setErrorMessage('');
 
     try {
+      console.log("FORM DATA BEFORE SAVE:", form);
       const formData = new FormData();
 
       Object.keys(form).forEach(k => formData.append(k, form[k]));
@@ -385,6 +387,15 @@ if (files.idProof)
     value={form.bathrooms || ""}
     onChange={(e) => handleChange("bathrooms", e.target.value)}
   />
+  <input
+  style={styles.input}
+  type="number"
+  placeholder="Square Feet"
+  value={form.squareFeet || ""}
+  onChange={(e) =>
+    handleChange("squareFeet", e.target.value)
+  }
+/>
 </div>
 <div style={styles.row}>
   <input
@@ -469,6 +480,7 @@ if (files.idProof)
   longitude: p.longitude || "",
   bedrooms: p.bedrooms || "",
   bathrooms: p.bathrooms || "",
+  squareFeet: p.squareFeet || "",
   availableFrom: p.availableFrom || "",
 });
 

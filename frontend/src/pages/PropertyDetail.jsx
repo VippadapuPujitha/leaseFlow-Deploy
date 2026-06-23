@@ -160,6 +160,10 @@ console.log("PROPERTY DETAILS:", property);
               <strong>Bathrooms</strong>
               <p>{property.bathrooms ?? '—'}</p>
             </div>
+            <div className="details-card mb-3">
+  <strong>Square Feet</strong>
+  <p>{property.squareFeet ?? '—'} sq ft</p>
+</div>
 
             <div className="details-card mb-3">
               <strong>Property Type</strong>

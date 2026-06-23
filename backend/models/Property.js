@@ -39,6 +39,10 @@ const propertySchema = new mongoose.Schema(
     type: Number,
     default: 1
 },
+squareFeet: {
+    type: Number,
+    default: 0
+},
 availableFrom: {
     type: Date
 },
