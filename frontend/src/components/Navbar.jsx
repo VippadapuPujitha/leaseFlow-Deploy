@@ -66,26 +66,26 @@ function Navbar() {
   );
 
   const renderAdminLinks = () => (
-    <>
-      <li className="nav-item">
-        <NavLink className={linkClass} to="/admin-dashboard">
-          Dashboard
-        </NavLink>
-      </li>
+  <>
+    <li className="nav-item">
+      <NavLink className={linkClass} to="/admin-dashboard">
+        Dashboard
+      </NavLink>
+    </li>
 
-      <li className="nav-item">
-        <NavLink className={linkClass} to="/admin/verification-requests">
-          Verification Queue
-        </NavLink>
-      </li>
+    <li className="nav-item">
+      <NavLink className={linkClass} to="/admin/verification-requests">
+        Verification Queue
+      </NavLink>
+    </li>
 
-      <li className="nav-item">
-        <NavLink className={linkClass} to="/admin/all-properties">
-          All Properties
-        </NavLink>
-      </li>
-    </>
-  );
+    <li className="nav-item">
+      <NavLink className={linkClass} to="/admin/all-properties">
+        All Properties
+      </NavLink>
+    </li>
+  </>
+);
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light shadow-sm bg-white">

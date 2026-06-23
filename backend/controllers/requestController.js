@@ -7,59 +7,57 @@ exports.sendRentalRequest = async (req, res) => {
     const { propertyId } = req.body;
 
     const property = await Property.findById(propertyId);
-    const existingRequest = await Request.findOne({
-  tenant: req.user.id,
-  property: propertyId,
-  status: "pending"
-});
-
-if (existingRequest) {
-  return res.status(400).json({
-    message: "You already sent a request for this property"
-  });
-}
-
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
+    }
+
+    const existingRequest = await Request.findOne({
+      tenant: req.user.id,
+      property: propertyId,
+      status: "pending",
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({
+        message: "You already sent a request for this property",
+      });
     }
 
     const request = await Request.create({
       tenant: req.user.id,
       property: propertyId,
-      owner: property.ownerId,   // ✅ IMPORTANT FIX
+      owner: property.ownerId,
       status: "pending",
-      contactShared: false
+      contactShared: false,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      request
+      request,
     });
-
   } catch (err) {
-  console.log("REQUEST ERROR:", err.response?.data);
-  setError(
-    err.response?.data?.message || "Unable to submit request."
-  );
-}
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 };
 
 /* ================= VIEW MY REQUESTS ================= */
 exports.viewMyRequests = async (req, res) => {
   try {
     const requests = await Request.find({
-      tenant: req.user.id
+      tenant: req.user.id,
     })
       .populate("property")
       .populate("owner", "name email phone");
 
-    res.json({
+    return res.json({
       success: true,
-      requests
+      requests,
     });
-
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -67,18 +65,17 @@ exports.viewMyRequests = async (req, res) => {
 exports.viewPropertyRequests = async (req, res) => {
   try {
     const requests = await Request.find({
-      property: req.params.propertyId
+      property: req.params.propertyId,
     })
-      .populate("tenant", "name email")
+      .populate("tenant", "name email phone")
       .populate("property");
 
-    res.json({
+    return res.json({
       success: true,
-      requests
+      requests,
     });
-
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -96,14 +93,18 @@ exports.acceptRequest = async (req, res) => {
 
     await request.save();
 
-    res.json({
+    await Property.findByIdAndUpdate(request.property, {
+      rentalStatus: "occupied",
+      status: "LOCKED",
+    });
+
+    return res.json({
       success: true,
       message: "Request accepted and contact shared",
       request,
     });
-
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -115,43 +116,42 @@ exports.rejectRequest = async (req, res) => {
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: "Request not found"
+        message: "Request not found",
       });
     }
 
     request.status = "rejected";
-
     await request.save();
 
-    res.json({
+    return res.json({
       success: true,
       message: "Request rejected",
-      request
+      request,
     });
-
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
+
+/* ================= OWNER REQUESTS ================= */
 exports.getOwnerRequests = async (req, res) => {
   try {
-    const ownerId = req.user.id;
-
     const requests = await Request.find({
-      owner: ownerId   // ✅ FILTER BY OWNER
+      owner: req.user.id,
     })
-      .populate("tenant", "name email")
+      .populate("tenant", "name email phone")
       .populate("property");
 
-    res.json({
+    return res.json({
       success: true,
-      requests
+      requests,
     });
-
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
+
+/* ================= WITHDRAW REQUEST ================= */
 exports.withdrawRequest = async (req, res) => {
   try {
     const request = await Request.findById(req.params.id);
@@ -159,62 +159,76 @@ exports.withdrawRequest = async (req, res) => {
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: "Request not found"
+        message: "Request not found",
       });
     }
 
     await request.deleteOne();
 
-    res.json({
+    return res.json({
       success: true,
-      message: "Request withdrawn successfully"
+      message: "Request withdrawn successfully",
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message
+    return res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };
+
+/* ================= FINALIZE DEAL ================= */
 exports.finalizeDeal = async (req, res) => {
   try {
-    const request = await Request.findById(req.params.id).populate("property");
+    const { decision } = req.body; // "success" or "fail"
+
+    const request = await Request.findById(req.params.id).populate(
+      "property"
+    );
 
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: "Request not found"
+        message: "Request not found",
       });
     }
 
     if (!request.property) {
       return res.status(400).json({
         success: false,
-        message: "Property not linked to request"
+        message: "Property not linked to request",
       });
     }
 
-    // update request safely
-    request.status = "accepted";
-    request.contactShared = true;
+    if (decision === "success") {
+      request.status = "accepted";
+      request.contactShared = true;
+
+      await Property.findByIdAndUpdate(request.property._id, {
+        rentalStatus: "occupied",
+        isHidden: true,
+        status: "LOCKED",
+      });
+    } else {
+      request.status = "cancelled";
+
+      await Property.findByIdAndUpdate(request.property._id, {
+        rentalStatus: "available",
+      });
+    }
 
     await request.save();
 
-    // update property safely
-    await Property.findByIdAndUpdate(request.property._id, {
-      rentalStatus: "occupied",
-      isHidden: true,
-      status: "LOCKED"
-    });
-
-    return res.status(200).json({
+    return res.json({
       success: true,
-      message: "Deal finalized successfully"
+      message: "Deal finalized successfully",
+      request,
     });
-
   } catch (err) {
-  console.log("FAILED URL:", err.config?.url);
-  console.log("FAILED STATUS:", err.response?.status);
-  console.log("FAILED DATA:", err.response?.data);
-
+    console.log("FINALIZE ERROR:", err.message);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };

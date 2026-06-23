@@ -1,5 +1,13 @@
 import api from '../api/axiosConfig';
 
+export const ADMIN_DATA_UPDATED_EVENT = 'leaseflow:admin-data-updated';
+
+export const notifyAdminDataChanged = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(ADMIN_DATA_UPDATED_EVENT));
+  }
+};
+
 export const getAdminProperties = () => api.get('/api/admin/properties');
 
 export const getVerificationQueue = () => api.get('/api/admin/verification-queue');

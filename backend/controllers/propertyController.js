@@ -1,4 +1,5 @@
 const Property = require("../models/Property");
+const Request = require("../models/Request");
 const fs = require("fs");
 const path = require("path");
 
@@ -18,6 +19,9 @@ const createProperty = async (req, res) => {
   description: req.body.description,
   bedrooms: req.body.bedrooms,
 bathrooms: req.body.bathrooms,
+  bathrooms: req.body.bathrooms,
+  squareFeet: req.body.squareFeet,
+  availableFrom: req.body.availableFrom,
   latitude: req.body.latitude,
   longitude: req.body.longitude,
 
@@ -163,25 +167,24 @@ const updateProperty = async (req, res) => {
     property.propertyType = req.body.propertyType;
     property.description = req.body.description;
     property.bedrooms = req.body.bedrooms;
-property.bathrooms = req.body.bathrooms;
+    property.bathrooms = req.body.bathrooms;
     property.latitude = req.body.latitude;
     property.longitude = req.body.longitude;
 
     await property.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       property
     });
 
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message
     });
   }
 };
-
 const deleteProperty = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
@@ -199,7 +202,13 @@ const deleteProperty = async (req, res) => {
   });
 }
 
-    await property.deleteOne();
+    // Delete all requests related to this property
+await Request.deleteMany({
+  property: property._id
+});
+
+// Delete property
+await property.deleteOne();
 
     res.status(200).json({
       success: true,
@@ -237,7 +246,7 @@ const approveProperty = async (req, res) => {
 }
     property.status = "ACTIVE";
     property.verificationStatus = "verified";
-    properrty.rejectionReason="";
+    property.rejectionReason="";
     await property.save();
 
     res.status(200).json({
@@ -566,7 +575,7 @@ const getOwnerStats = async (req, res) => {
         totalProperties,
         activeProperties,
         pendingProperties,
-        occupiedProperties,
+        occupiedProperties: rentedProperties,
         hiddenProperties
       }
     });

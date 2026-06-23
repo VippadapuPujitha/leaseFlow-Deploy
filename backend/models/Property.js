@@ -11,6 +11,11 @@ const propertySchema = new mongoose.Schema(
         type: String,
         required: true
     },
+    
+    city: {
+    type: String,
+    default: ""
+},
 
     rent: {
         type: Number,
@@ -26,6 +31,21 @@ const propertySchema = new mongoose.Schema(
         type: String,
         required: true
     },
+    bedrooms: {
+    type: Number,
+    default: 1
+},
+    bathrooms: {
+    type: Number,
+    default: 1
+},
+squareFeet: {
+    type: Number,
+    default: 0
+},
+availableFrom: {
+    type: Date
+},
 
     images: [
         {

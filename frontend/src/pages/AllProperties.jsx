@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { deleteProperty, getAdminProperties } from '../services/adminService';
+import {
+  ADMIN_DATA_UPDATED_EVENT,
+  deleteProperty,
+  getAdminProperties,
+  notifyAdminDataChanged,
+} from '../services/adminService';
 
 const normalizeStatus = (status) => {
   const value = String(status || 'pending').toLowerCase();
@@ -29,6 +34,16 @@ function AllProperties() {
     };
 
     fetchProperties();
+
+    const handleAdminRefresh = () => {
+      fetchProperties();
+    };
+
+    window.addEventListener(ADMIN_DATA_UPDATED_EVENT, handleAdminRefresh);
+
+    return () => {
+      window.removeEventListener(ADMIN_DATA_UPDATED_EVENT, handleAdminRefresh);
+    };
   }, []);
 
   const handleDelete = async (propertyId) => {
@@ -45,9 +60,28 @@ function AllProperties() {
       await deleteProperty(propertyId);
       setProperties((current) => current.filter((property) => property._id !== propertyId));
       setMessage('Property deleted successfully.');
+      notifyAdminDataChanged();
     } catch (deleteError) {
       setError(deleteError.response?.data?.message || 'Unable to delete property.');
     }
+  };
+
+  const getVerificationLabel = (property) => {
+    const status = normalizeStatus(property.verificationStatus);
+
+    if (status === 'verified') {
+      return 'Verified';
+    }
+
+    if (status === 'rejected') {
+      return 'Rejected';
+    }
+
+    if (status === 'pending') {
+      return 'Pending';
+    }
+
+    return status;
   };
 
   return (
@@ -95,8 +129,16 @@ function AllProperties() {
                     <td>{property.ownerId?.name || property.ownerDetails?.name || 'Owner unavailable'}</td>
                     <td>
                       <span className={`status-pill status-pill--${normalizeStatus(property.verificationStatus)}`}>
-                        {normalizeStatus(property.verificationStatus)}
+                        {getVerificationLabel(property)}
                       </span>
+                      {normalizeStatus(property.verificationStatus) === 'verified' && (
+                        <div className="text-muted small mt-1">Verified status</div>
+                      )}
+                      {normalizeStatus(property.verificationStatus) === 'rejected' && (
+                        <div className="text-muted small mt-1">
+                          {property.rejectionReason || 'No rejection reason provided.'}
+                        </div>
+                      )}
                     </td>
                     <td>{property.rent ? `Rs. ${property.rent}` : 'N/A'}</td>
                     <td className="d-flex flex-wrap gap-2">

@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAdminProperties, getVerificationQueue } from '../services/adminService';
+import {
+  ADMIN_DATA_UPDATED_EVENT,
+  getAdminProperties,
+  getVerificationQueue,
+} from '../services/adminService';
 
 const normalizeVerificationStatus = (status) => {
   const value = String(status || 'pending').toLowerCase();
-  return value === 'approved' ? 'verified' : value;
+  if (value === 'approved') return 'verified';
+  if (value === 'not_requested') return 'pending';
+  return value;
 };
 
 function AdminDashboard() {
@@ -25,7 +31,11 @@ function AdminDashboard() {
         ]);
 
         setProperties(propertiesResponse.data.properties || []);
-        setVerificationQueue(queueResponse.data.properties || []);
+        setVerificationQueue(
+          (queueResponse.data.properties || []).filter(
+            (property) => normalizeVerificationStatus(property.verificationStatus) === 'pending'
+          )
+        );
       } catch (fetchError) {
         setError(fetchError.response?.data?.message || 'Unable to load admin dashboard.');
       } finally {
@@ -34,6 +44,16 @@ function AdminDashboard() {
     };
 
     fetchAdminData();
+
+    const handleAdminRefresh = () => {
+      fetchAdminData();
+    };
+
+    window.addEventListener(ADMIN_DATA_UPDATED_EVENT, handleAdminRefresh);
+
+    return () => {
+      window.removeEventListener(ADMIN_DATA_UPDATED_EVENT, handleAdminRefresh);
+    };
   }, []);
 
   const summary = useMemo(() => {
@@ -87,7 +107,7 @@ function AdminDashboard() {
           <div className="stat-card__value">{summary.total}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-card__title">Pending Verifications</div>
+          <div className="stat-card__title">Pending Properties</div>
           <div className="stat-card__value">{summary.pending}</div>
         </div>
         <div className="stat-card">
@@ -105,15 +125,15 @@ function AdminDashboard() {
           <div className="card card-glass h-100 p-4 admin-action-card">
             <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
               <div>
-                <h3 className="h5 mb-2">Verification Queue</h3>
+                <h3 className="h5 mb-2">Verified Properties</h3>
                 <p className="text-muted mb-0">
-                  Review new submissions and process pending verification requests.
+                  View all approved and verified properties.
                 </p>
               </div>
-              <span className="badge bg-primary-soft text-primary">{verificationQueue.length} pending</span>
+              <span className="badge bg-primary-soft text-primary">{summary.verified} verified</span>
             </div>
-            <Link to="/admin/verification-requests" className="btn btn-outline-primary mt-auto align-self-start">
-              Open queue
+            <Link to="/admin/verified-properties" className="btn btn-outline-primary mt-auto align-self-start">
+              View Verified
             </Link>
           </div>
         </div>
@@ -121,15 +141,15 @@ function AdminDashboard() {
           <div className="card card-glass h-100 p-4 admin-action-card">
             <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
               <div>
-                <h3 className="h5 mb-2">All Properties</h3>
+                <h3 className="h5 mb-2">Rejected Properties</h3>
                 <p className="text-muted mb-0">
-                  Browse the full catalog, status history, and owner details.
+                  View all rejected properties and rejection reasons.
                 </p>
               </div>
-              <span className="badge bg-primary-soft text-primary">{summary.total} total</span>
+              <span className="badge bg-primary-soft text-primary">{summary.rejected} rejected</span>
             </div>
-            <Link to="/admin/all-properties" className="btn btn-outline-primary mt-auto align-self-start">
-              Open list
+            <Link to="/admin/rejected-properties" className="btn btn-outline-primary mt-auto align-self-start">
+              View Rejected
             </Link>
           </div>
         </div>
