@@ -34,7 +34,6 @@ app.use("/api/users", userRoutes);
 
 // Request Routes
 app.use("/api/requests", requestRoutes);
-console.log("REQUEST ROUTES IMPORTED");
 
 // Property Routes
 app.use("/api/properties", propertyRoutes);
@@ -43,11 +42,10 @@ app.use("/api/properties", propertyRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
-  res.send("ACE TEST 123");
+  res.send("LeaseFlow API Working");
 });
 
 const PORT = process.env.PORT || 5000;
-console.log("SERVER FILE UPDATED");
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

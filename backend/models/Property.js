@@ -107,7 +107,7 @@ bathrooms: {
     // Rental Status
     rentalStatus: {
         type: String,
-        enum: ["available", "occupied"],
+        enum: ["available", "rented"],
         default: "available"
     },
 

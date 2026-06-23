@@ -1,10 +1,6 @@
 const express = require("express");
 const router = express.Router();
-router.get("/test", (req, res) => {
-  res.send("REQUEST ROUTE WORKING");
-});
 const authMiddleware = require("../middleware/authMiddleware");
-console.log("REQUEST ROUTES LOADED");
 const {
   sendRentalRequest,
   withdrawRequest,
@@ -32,10 +28,6 @@ router.patch("/accept/:id", authMiddleware, acceptRequest);
 router.patch("/reject/:id", authMiddleware, rejectRequest);
 
 router.get("/owner", authMiddleware, getOwnerRequests);
-console.log("FINALIZE ROUTE REGISTERED");
 
 router.patch("/finalize/:id", authMiddleware, finalizeDeal);
-router.get("/test", (req, res) => {
-  res.send("Finalize Route Working");
-});
 module.exports = router;

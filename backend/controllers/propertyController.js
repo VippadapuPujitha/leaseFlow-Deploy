@@ -144,6 +144,8 @@ const getPropertyById = async (req, res) => {
 
 const updateProperty = async (req, res) => {
   try {
+    console.log("UPDATE BODY:", req.body);
+
     const property = await Property.findById(req.params.id);
 
     if (!property) {
@@ -161,24 +163,32 @@ const updateProperty = async (req, res) => {
     }
 
     property.title = req.body.title;
+    property.propertyType = req.body.propertyType;
     property.address = req.body.address;
     property.city = req.body.city;
     property.rent = req.body.rent;
-    property.propertyType = req.body.propertyType;
     property.description = req.body.description;
+
     property.bedrooms = req.body.bedrooms;
     property.bathrooms = req.body.bathrooms;
+
     property.latitude = req.body.latitude;
     property.longitude = req.body.longitude;
+
+    property.squareFeet = req.body.squareFeet;
+    property.availableFrom = req.body.availableFrom;
 
     await property.save();
 
     return res.status(200).json({
       success: true,
+      message: "Property updated successfully",
       property
     });
 
   } catch (error) {
+    console.log("UPDATE ERROR:", error);
+
     return res.status(500).json({
       success: false,
       message: error.message
@@ -201,15 +211,14 @@ const deleteProperty = async (req, res) => {
     message: "You can delete only your own property"
   });
 }
-
-    // Delete all requests related to this property
-await Request.deleteMany({
+// Delete property
+// Delete all requests related to this property
+const deletedRequests=await Request.deleteMany({
   property: property._id
 });
-
+console.log("Deleted Requests:",deletedRequests);
 // Delete property
 await property.deleteOne();
-
     res.status(200).json({
       success: true,
       message: "Property deleted successfully"
