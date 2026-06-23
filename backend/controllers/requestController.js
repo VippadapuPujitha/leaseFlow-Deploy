@@ -136,18 +136,27 @@ exports.rejectRequest = async (req, res) => {
 /* ================= OWNER REQUESTS ================= */
 exports.getOwnerRequests = async (req, res) => {
   try {
+    const ownerId = req.user.id;
+
     const requests = await Request.find({
-      owner: req.user.id,
+      owner: ownerId
     })
       .populate("tenant", "name email phone")
       .populate("property");
 
-    return res.json({
+    const filteredRequests = requests.filter(
+      request => request.property !== null
+    );
+
+    res.json({
       success: true,
-      requests,
+      requests: filteredRequests
     });
+
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
 

@@ -11,8 +11,6 @@ const initialForm = {
   city: '',
   rent: '',
   description: '',
-  bathrooms:'',
-  bedrooms:'',
   latitude: '',
   longitude: '',
   bedrooms: '',
@@ -36,6 +34,7 @@ const [errorMessage, setErrorMessage] = useState('');
 const [dealMessage, setDealMessage] = useState('');
 const [updateMessage, setUpdateMessage] = useState("");
 const [requestMessage, setRequestMessage] = useState("");
+const [deleteMessage, setDeleteMessage] = useState("");
 const [isEditMode, setIsEditMode] = useState(false);
 const [files, setFiles] = useState({
   images: [],
@@ -153,36 +152,47 @@ console.log("FORM:", form);
   };
 
   // ---------------- UPDATE PROPERTY ----------------
- const handleUpdate = async () => {
+const handleUpdate = async () => {
   try {
+    console.log("Updating property:", selectedProperty._id);
+    console.log("Form Data:", form);
+
     const res = await api.put(
       `/api/properties/${selectedProperty._id}`,
       form
     );
 
-    setProperties((prev) =>
-      prev.map((p) =>
-        p._id === selectedProperty._id ? res.data.property : p
-      )
-    );
+    console.log(res.data);
 
+    setUpdateMessage("Property updated successfully");
     setIsEditMode(false);
-    setSelectedProperty(null);
-    setForm(initialForm);
+
+    fetchProperties(); // reload properties
   } catch (err) {
-    console.log(err);
+    console.log(
+      "UPDATE ERROR:",
+      err.response?.data || err.message
+    );
   }
 };
 
   // ---------------- DELETE ----------------
   const handleDelete = async (id) => {
-    try {
-      await api.delete(`/api/properties/${id}`);
-      setProperties(prev => prev.filter(p => p._id !== id));
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  try {
+    await api.delete(`/api/properties/${id}`);
+
+    setProperties(prev => prev.filter(p => p._id !== id));
+
+    setDeleteMessage("Property deleted successfully");
+
+    setTimeout(() => {
+      setDeleteMessage("");
+    }, 3000);
+
+  } catch (err) {
+    console.log("DELETE ERROR:", err.response?.data || err);
+  }
+};
 
   // ---------------- REQUEST ACTIONS ----------------
   const handleAccept = async (id) => {
@@ -190,15 +200,15 @@ console.log("FORM:", form);
     await api.patch(`/api/requests/accept/${id}`);
 
     setRequests(prev =>
-      prev.map(r =>
-        r._id === id
-          ? {
-              ...r,
-              showDealButton: true
-            }
-          : r
-      )
-    );
+  prev.map(r =>
+    r._id === id
+      ? {
+          ...r,
+          showDealButton: true
+        }
+      : r
+  )
+);
 
     setRequestMessage("✅ Request accepted successfully!");
 
@@ -251,15 +261,30 @@ const handleUnhideProperty = async (id) => {
 };
 
   const handleReject = async (id) => {
-    try {
-      await api.patch(`/api/requests/reject/${id}`);
-      setRequests(prev =>
-        prev.map(r => r._id === id ? { ...r, status: 'rejected' } : r)
-      );
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  try {
+    await api.patch(`/api/requests/reject/${id}`);
+
+    setRequests(prev =>
+      prev.map(r =>
+        r._id === id
+          ? {
+              ...r,
+              status: "rejected"
+            }
+          : r
+      )
+    );
+
+    setRequestMessage("❌ Request rejected successfully");
+
+    setTimeout(() => {
+      setRequestMessage("");
+    }, 3000);
+
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const handleFinalize = async (id, decision) => {
   try {
@@ -446,129 +471,206 @@ const hiddenProperties = properties.filter(
       style={styles.form}
     >
       <div style={styles.row}>
-        <input
-          style={styles.input}
-          placeholder="Title"
-          value={form.title}
-          onChange={(e) => handleChange("title", e.target.value)}
-        />
+  <div style={styles.fieldGroup}>
+    <label>
+      Title <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      placeholder="Title"
+      value={form.title}
+      onChange={(e) => handleChange("title", e.target.value)}
+    />
+  </div>
 
-        <select
-          style={styles.input}
-          value={form.propertyType}
-          onChange={(e) => handleChange("propertyType", e.target.value)}
-        >
-          {propertyTypes.map((t) => (
-            <option key={t}>{t}</option>
-          ))}
-        </select>
-      </div>
-
-      <div style={styles.row}>
-        <input
-          style={styles.input}
-          placeholder="Address"
-          value={form.address}
-          onChange={(e) => handleChange("address", e.target.value)}
-        />
-
-        <input
-          style={styles.input}
-          placeholder="City"
-          value={form.city}
-          onChange={(e) => handleChange("city", e.target.value)}
-        />
-      </div>
+  <div style={styles.fieldGroup}>
+    <label>
+      Property Type <span style={{ color: "red" }}>*</span>
+    </label>
+    <select
+      style={styles.input}
+      value={form.propertyType}
+      onChange={(e) => handleChange("propertyType", e.target.value)}
+    >
+      {propertyTypes.map((t) => (
+        <option key={t}>{t}</option>
+      ))}
+    </select>
+  </div>
+</div>
 
       <div style={styles.row}>
-        <input
-          style={styles.input}
-          type="number"
-          placeholder="Rent"
-          value={form.rent}
-          onChange={(e) => handleChange("rent", e.target.value)}
-        />
+  <div style={styles.fieldGroup}>
+    <label>
+      Address <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      placeholder="Address"
+      value={form.address}
+      onChange={(e) => handleChange("address", e.target.value)}
+    />
+  </div>
 
-        <textarea
-          style={styles.input}
-          placeholder="Description"
-          value={form.description}
-          onChange={(e) => handleChange("description", e.target.value)}
-        />
-      </div>
-
-      <div style={styles.row}>
-        <input
-          style={styles.input}
-          type="number"
-          placeholder="Bedrooms"
-          value={form.bedrooms}
-          onChange={(e) => handleChange("bedrooms", e.target.value)}
-        />
-
-        <input
-          style={styles.input}
-          type="number"
-          placeholder="Bathrooms"
-          value={form.bathrooms}
-          onChange={(e) => handleChange("bathrooms", e.target.value)}
-        />
-      </div>
+  <div style={styles.fieldGroup}>
+    <label>
+      City <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      placeholder="City"
+      value={form.city}
+      onChange={(e) => handleChange("city", e.target.value)}
+    />
+  </div>
+</div>
 
       <div style={styles.row}>
-        <input
-          style={styles.input}
-          type="number"
-          placeholder="Latitude"
-          value={form.latitude}
-          onChange={(e) => handleChange("latitude", e.target.value)}
-        />
+  <div style={styles.fieldGroup}>
+    <label>
+      Rent <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      type="number"
+      placeholder="Rent"
+      value={form.rent}
+      onChange={(e) => handleChange("rent", e.target.value)}
+    />
+  </div>
 
-        <input
-          style={styles.input}
-          type="number"
-          placeholder="Longitude"
-          value={form.longitude}
-          onChange={(e) => handleChange("longitude", e.target.value)}
-        />
-      </div>
-
-      <div style={styles.row}>
-        <div style={styles.fileBox}>
-          <label>Images</label>
-          <input
-            type="file"
-            multiple
-            onChange={(e) => handleFile("images", [...e.target.files])}
-          />
-        </div>
-
-        <div style={styles.fileBox}>
-          <label>Ownership Doc</label>
-          <input
-            type="file"
-            onChange={(e) => handleFile("ownershipDoc", e.target.files[0])}
-          />
-        </div>
-      </div>
+  <div style={styles.fieldGroup}>
+    <label>
+      Description <span style={{ color: "red" }}>*</span>
+    </label>
+    <textarea
+      style={styles.input}
+      placeholder="Description"
+      value={form.description}
+      onChange={(e) => handleChange("description", e.target.value)}
+    />
+  </div>
+</div>
 
       <div style={styles.row}>
-        <div style={styles.fileBox}>
-          <label>Tax Doc</label>
-          <input
-            type="file"
-            onChange={(e) => handleFile("taxDoc", e.target.files[0])}
-          />
-        </div>
+  <div style={styles.fieldGroup}>
+    <label>
+      Bedrooms <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      type="number"
+      placeholder="Bedrooms"
+      value={form.bedrooms}
+      onChange={(e) => handleChange("bedrooms", e.target.value)}
+    />
+  </div>
 
-        <div style={styles.fileBox}>
-          <label>ID Proof</label>
-          <input
-            type="file"
-            onChange={(e) => handleFile("idProof", e.target.files[0])}
-          />
-        </div>
-      </div>
+  <div style={styles.fieldGroup}>
+    <label>
+      Bathrooms <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      type="number"
+      placeholder="Bathrooms"
+      value={form.bathrooms}
+      onChange={(e) => handleChange("bathrooms", e.target.value)}
+    />
+  </div>
+</div>
+
+      <div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>
+      Latitude <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      type="number"
+      placeholder="Latitude"
+      value={form.latitude}
+      onChange={(e) => handleChange("latitude", e.target.value)}
+    />
+  </div>
+
+  <div style={styles.fieldGroup}>
+    <label>
+      Longitude <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      type="number"
+      placeholder="Longitude"
+      value={form.longitude}
+      onChange={(e) => handleChange("longitude", e.target.value)}
+    />
+  </div>
+</div>
+      <div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>
+      Square Feet <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      type="number"
+      placeholder="Square Feet"
+      value={form.squareFeet}
+      onChange={(e) => handleChange("squareFeet", e.target.value)}
+    />
+  </div>
+
+  <div style={styles.fieldGroup}>
+    <label>
+      Available From <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      type="date"
+      value={form.availableFrom}
+      onChange={(e) => handleChange("availableFrom", e.target.value)}
+    />
+  </div>
+</div>
+      <div style={styles.row}>
+  <div style={styles.fileBox}>
+    <label>
+      Images <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      type="file"
+      multiple
+      onChange={(e) => handleFile("images", [...e.target.files])}
+    />
+  </div>
+
+  <div style={styles.fileBox}>
+    <label>Ownership Document</label>
+    <input
+      type="file"
+      onChange={(e) => handleFile("ownershipDoc", e.target.files[0])}
+    />
+  </div>
+</div>
+
+      <div style={styles.row}>
+  <div style={styles.fileBox}>
+    <label>Tax Document</label>
+    <input
+      type="file"
+      onChange={(e) => handleFile("taxDoc", e.target.files[0])}
+    />
+  </div>
+
+  <div style={styles.fileBox}>
+    <label>ID Proof</label>
+    <input
+      type="file"
+      onChange={(e) => handleFile("idProof", e.target.files[0])}
+    />
+  </div>
+</div>
 
       <button style={styles.btn}>
         {selectedProperty ? "Update" : "Save"}
@@ -605,55 +707,201 @@ const hiddenProperties = properties.filter(
         >
 
           <div style={styles.row}>
-            <input
-              style={styles.input}
-              placeholder="Address"
-              value={form.address}
-              onChange={(e) => handleChange("address", e.target.value)}
-            />
+  <div style={styles.fieldGroup}>
+    <label>
+      Title <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      value={form.title}
+      onChange={(e) => handleChange("title", e.target.value)}
+    />
+  </div>
 
-            <input
-              style={styles.input}
-              placeholder="City"
-              value={form.city}
-              onChange={(e) => handleChange("city", e.target.value)}
-            />
-          </div>
-
-          <div style={styles.row}>
-            <input
-              style={styles.input}
-              type="number"
-              placeholder="Rent"
-              value={form.rent}
-              onChange={(e) => handleChange("rent", e.target.value)}
-            />
-
-            <textarea
-              style={styles.input}
-              placeholder="Description"
-              value={form.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-            />
-          </div>
+  <div style={styles.fieldGroup}>
+    <label>
+      Property Type <span style={{ color: "red" }}>*</span>
+    </label>
+    <select
+      style={styles.input}
+      value={form.propertyType}
+      onChange={(e) => handleChange("propertyType", e.target.value)}
+    >
+      {propertyTypes.map((t) => (
+        <option key={t}>{t}</option>
+      ))}
+    </select>
+  </div>
+</div>
 
           <div style={styles.row}>
-            <input
-              style={styles.input}
-              type="number"
-              placeholder="Latitude"
-              value={form.latitude}
-              onChange={(e) => handleChange("latitude", e.target.value)}
-            />
+  <div style={styles.fieldGroup}>
+    <label>
+      Address <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      value={form.address}
+      onChange={(e) => handleChange("address", e.target.value)}
+    />
+  </div>
 
-            <input
-              style={styles.input}
-              type="number"
-              placeholder="Longitude"
-              value={form.longitude}
-              onChange={(e) => handleChange("longitude", e.target.value)}
-            />
-          </div>
+  <div style={styles.fieldGroup}>
+    <label>
+      City <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      style={styles.input}
+      value={form.city}
+      onChange={(e) => handleChange("city", e.target.value)}
+    />
+  </div>
+</div>
+          <div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>
+      Rent <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      type="number"
+      style={styles.input}
+      value={form.rent}
+      onChange={(e) => handleChange("rent", e.target.value)}
+    />
+  </div>
+
+  <div style={styles.fieldGroup}>
+    <label>
+      Description <span style={{ color: "red" }}>*</span>
+    </label>
+    <textarea
+      style={styles.input}
+      value={form.description}
+      onChange={(e) => handleChange("description", e.target.value)}
+    />
+  </div>
+</div>
+          <div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>
+      Bedrooms <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      type="number"
+      style={styles.input}
+      value={form.bedrooms}
+      onChange={(e) => handleChange("bedrooms", e.target.value)}
+    />
+  </div>
+
+  <div style={styles.fieldGroup}>
+    <label>
+      Bathrooms <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      type="number"
+      style={styles.input}
+      value={form.bathrooms}
+      onChange={(e) => handleChange("bathrooms", e.target.value)}
+    />
+  </div>
+</div>
+<div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>
+      Latitude <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      type="number"
+      style={styles.input}
+      value={form.latitude}
+      onChange={(e) => handleChange("latitude", e.target.value)}
+    />
+  </div>
+
+  <div style={styles.fieldGroup}>
+    <label>
+      Longitude <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      type="number"
+      style={styles.input}
+      value={form.longitude}
+      onChange={(e) => handleChange("longitude", e.target.value)}
+    />
+  </div>
+</div>
+<div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>
+      Square Feet <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      type="number"
+      style={styles.input}
+      value={form.squareFeet}
+      onChange={(e) => handleChange("squareFeet", e.target.value)}
+    />
+  </div>
+
+  <div style={styles.fieldGroup}>
+    <label>
+      Available From <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      type="date"
+      style={styles.input}
+      value={form.availableFrom}
+      onChange={(e) => handleChange("availableFrom", e.target.value)}
+    />
+  </div>
+</div>
+          <div style={styles.row}>
+  <div style={styles.fileBox}>
+    <label>
+      Images <span style={{ color: "red" }}>*</span>
+    </label>
+    <input
+      type="file"
+      multiple
+      onChange={(e) =>
+        handleFile("images", [...e.target.files])
+      }
+    />
+  </div>
+
+  <div style={styles.fileBox}>
+    <label>Ownership Document</label>
+    <input
+      type="file"
+      onChange={(e) =>
+        handleFile("ownershipDocument", e.target.files[0])
+      }
+    />
+  </div>
+</div>
+
+<div style={styles.row}>
+  <div style={styles.fileBox}>
+    <label>Tax Document</label>
+    <input
+      type="file"
+      onChange={(e) =>
+        handleFile("taxDocument", e.target.files[0])
+      }
+    />
+  </div>
+
+  <div style={styles.fileBox}>
+    <label>ID Proof</label>
+    <input
+      type="file"
+      onChange={(e) =>
+        handleFile("idProof", e.target.files[0])
+      }
+    />
+  </div>
+</div>
 
           <button style={styles.btn}>Update Property</button>
         </form>
@@ -681,17 +929,21 @@ const hiddenProperties = properties.filter(
                   setSelectedProperty(p);
                   setIsEditMode(true);
                   setForm({
-                    title: p.title || "",
-                    propertyType: p.propertyType || "Apartment",
-                    address: p.address || "",
-                    city: p.city || "",
-                    rent: p.rent || "",
-                    description: p.description || "",
-                    latitude: p.latitude || "",
-                    longitude: p.longitude || "",
-                    bedrooms: p.bedrooms || "",
-                    bathrooms: p.bathrooms || "",
-                  });
+  title: p.title || "",
+  propertyType: p.propertyType || "Apartment",
+  address: p.address || "",
+  city: p.city || "",
+  rent: p.rent || "",
+  description: p.description || "",
+  latitude: p.latitude || "",
+  longitude: p.longitude || "",
+  bedrooms: p.bedrooms || "",
+  bathrooms: p.bathrooms || "",
+  squareFeet: p.squareFeet || "",
+  availableFrom: p.availableFrom
+    ? p.availableFrom.split("T")[0]
+    : "",
+});
                 }}
               >
                 Edit
@@ -753,6 +1005,19 @@ const hiddenProperties = properties.filter(
         {dealMessage}
       </div>
     )}
+    {requestMessage && (
+  <div
+    style={{
+      background: "#dcfce7",
+      color: "#166534",
+      padding: "10px",
+      borderRadius: "6px",
+      marginBottom: "15px"
+    }}
+  >
+    {requestMessage}
+  </div>
+)}
 
     <h2>Tenant Requests</h2>
 
@@ -767,7 +1032,7 @@ const hiddenProperties = properties.filter(
           <p><b>Property:</b> {r.property?.title}</p>
           <p><b>Status:</b> {r.status}</p>
 
-          {r.status === "pending" && (
+          {r.status === "pending" && !r.showDealButton && (
             <div style={{ display: "flex", gap: "10px" }}>
               <button onClick={() => handleAccept(r._id)}>
                 Accept
@@ -779,22 +1044,23 @@ const hiddenProperties = properties.filter(
             </div>
           )}
 
-          {r.showDealButton && (
-            <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
-              <button
-                style={styles.btn}
-                onClick={() => handleFinalize(r._id, "success")}
-              >
-                Deal Completed
-              </button>
+          {r.status === "accepted" && r.showDealButton && (
+  <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+    <button
+      style={styles.btn}
+      onClick={() => handleFinalize(r._id, "success")}
+    >
+      Deal Completed
+    </button>
 
-              <button
-                onClick={() => handleFinalize(r._id, "fail")}
-              >
-                Deal Cancelled
-              </button>
-            </div>
-          )}
+    <button
+      onClick={() => handleFinalize(r._id, "fail")}
+    >
+      Deal Cancelled
+    </button>
+  </div>
+)}
+        
         </div>
       ))}
     </div>
