@@ -1,16 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext.jsx';
-
-const ownerNavigation = [
-  { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
-  { id: 'add', label: 'Add Property', icon: '➕' },
-  { id: 'properties', label: 'My Properties', icon: '🏢' },
-  { id: 'requests', label: 'Tenant Requests', icon: '📨' },
-];
+import { useLocation } from "react-router-dom";
 
 const propertyTypes = ['Apartment', 'House', 'Villa', 'Office', 'Shop'];
-
 const initialForm = {
   title: '',
   propertyType: 'Apartment',
@@ -18,41 +11,51 @@ const initialForm = {
   city: '',
   rent: '',
   description: '',
+  bathrooms:'',
+  bedrooms:'',
   latitude: '',
   longitude: '',
 };
 
 function OwnerDashboard() {
   const { user } = useAuth();
-
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const location = useLocation();
+const path = location.pathname;
+console.log("CURRENT PATH:", path);
   const [properties, setProperties] = useState([]);
   const [requests, setRequests] = useState([]);
-
+  
   const [form, setForm] = useState(initialForm);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
 const [errorMessage, setErrorMessage] = useState('');
-  const [files, setFiles] = useState({
-    images: [],
-    ownershipDoc: null,
-    taxDoc: null,
-    idProof: null,
-  });
+const [dealMessage, setDealMessage] = useState('');
+const [updateMessage, setUpdateMessage] = useState("");
+const [requestMessage, setRequestMessage] = useState("");
+const [isEditMode, setIsEditMode] = useState(false);
+const [files, setFiles] = useState({
+  images: [],
+  ownershipDoc: null,
+  taxDoc: null,
+  idProof: null,
+});
+
 
   // ---------------- FETCH PROPERTIES ----------------
   useEffect(() => {
-    console.log("USER:", user);
+  console.log("USER:", user);
+
   if (!user?.id) return;
 
   const fetchProperties = async () => {
     try {
-      const res = await api.get(`/api/properties/owner/${user.id}`);
+      const res = await api.get(
+        `/api/properties/owner/${user.id}`
+      );
 
       console.log("Owner Properties Response:", res.data);
 
       setProperties(res.data.properties || []);
-      console.log("Properties:", res.data.properties);
     } catch (err) {
       console.log("Fetch Error:", err);
     }
@@ -63,12 +66,22 @@ const [errorMessage, setErrorMessage] = useState('');
 
   // ---------------- FETCH REQUESTS ----------------
   useEffect(() => {
-    if (activeSection === 'requests') {
-      api.get('/api/requests/owner')
-        .then(res => setRequests(res.data.requests || []))
-        .catch(console.log);
+  if (path !== "/tenant-requests") return;
+
+  const fetchRequests = async () => {
+    try {
+      const res = await api.get("/api/requests/owner");
+
+      console.log("Owner Requests Response:", res.data);
+
+      setRequests(res.data.requests || []);
+    } catch (err) {
+      console.log("Requests Fetch Error:", err);
     }
-  }, [activeSection]);
+  };
+
+  fetchRequests();
+}, [path]);
 
   // ---------------- FORM HANDLERS ----------------
   const handleChange = (key, value) => {
@@ -79,9 +92,7 @@ const [errorMessage, setErrorMessage] = useState('');
     setFiles(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSelectSection = (sec) => {
-    setActiveSection(sec);
-  };
+
 
   // ---------------- SAVE PROPERTY ----------------
   const handleSave = async (e) => {
@@ -93,12 +104,11 @@ const [errorMessage, setErrorMessage] = useState('');
   !form.city ||
   !form.rent ||
   !form.description ||
+  !form.bedrooms ||
+  !form.bathrooms ||
   !form.latitude ||
   !form.longitude ||
-  files.images.length === 0 ||
-  !files.ownershipDoc ||
-  !files.taxDoc ||
-  !files.idProof
+  files.images.length === 0 
 ) {
   setErrorMessage("Please fill all fields and upload all required documents.");
   return;
@@ -121,7 +131,7 @@ if (files.taxDoc)
 
 if (files.idProof)
   formData.append('aadhaarPan', files.idProof);
-
+console.log("FORM:", form);
       const res = await api.post('/api/properties', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -138,27 +148,26 @@ if (files.idProof)
   };
 
   // ---------------- UPDATE PROPERTY ----------------
-  const handleUpdate = async () => {
-    try {
-      const res = await api.put(
-        `/api/properties/${selectedProperty._id}`,
-        form
-      );
+ const handleUpdate = async () => {
+  try {
+    const res = await api.put(
+      `/api/properties/${selectedProperty._id}`,
+      form
+    );
 
-      setProperties(prev =>
-        prev.map(p =>
-          p._id === selectedProperty._id ? res.data.property : p
-        )
-      );
+    setProperties((prev) =>
+      prev.map((p) =>
+        p._id === selectedProperty._id ? res.data.property : p
+      )
+    );
 
-      setSelectedProperty(null);
-      setForm(initialForm);
-      setActiveSection('properties');
-
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    setIsEditMode(false);
+    setSelectedProperty(null);
+    setForm(initialForm);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   // ---------------- DELETE ----------------
   const handleDelete = async (id) => {
@@ -172,15 +181,69 @@ if (files.idProof)
 
   // ---------------- REQUEST ACTIONS ----------------
   const handleAccept = async (id) => {
-    try {
-      await api.patch(`/api/requests/accept/${id}`);
-      setRequests(prev =>
-        prev.map(r => r._id === id ? { ...r, status: 'accepted' } : r)
-      );
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  try {
+    await api.patch(`/api/requests/accept/${id}`);
+
+    setRequests(prev =>
+      prev.map(r =>
+        r._id === id
+          ? {
+              ...r,
+              showDealButton: true
+            }
+          : r
+      )
+    );
+
+    setRequestMessage("✅ Request accepted successfully!");
+
+    setTimeout(() => {
+      setRequestMessage("");
+    }, 3000);
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const handleHideProperty = async (id) => {
+  try {
+    await api.patch(`/api/properties/hide/${id}`);
+
+    setProperties((prev) =>
+      prev.map((p) =>
+        p._id === id
+          ? { ...p, isHidden: true }
+          : p
+      )
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
+const handleUnhideProperty = async (id) => {
+  try {
+    console.log("UNHIDE CLICKED:", id);
+
+    const res = await api.patch(
+      `/api/properties/unhide/${id}`
+    );
+
+    console.log("UNHIDE RESPONSE:", res.data);
+
+    setProperties((prev) =>
+      prev.map((p) =>
+        p._id === id
+          ? { ...p, isHidden: false }
+          : p
+      )
+    );
+  } catch (err) {
+    console.log("UNHIDE ERROR:", err);
+    console.log("STATUS:", err.response?.status);
+    console.log("DATA:", err.response?.data);
+  }
+};
 
   const handleReject = async (id) => {
     try {
@@ -193,6 +256,63 @@ if (files.idProof)
     }
   };
 
+  const handleFinalize = async (id, decision) => {
+  try {
+    const res = await api.patch(
+  `/api/requests/finalize/${id}`,
+  { decision }
+);
+
+console.log("FINALIZE RESPONSE:", res.data);
+
+    if (decision === "success") {
+      setDealMessage(
+        "Deal completed successfully. Property moved to Hidden Properties."
+      );
+    } else {
+      setDealMessage(
+        "Deal cancelled successfully."
+      );
+    }
+
+   setRequests(prev =>
+  prev.map(r =>
+    r._id === id
+      ? {
+          ...r,
+          status:
+            decision === "success"
+              ? "occupied"
+              : "cancelled",
+          finalStatus: decision,
+          showDealButton: false,
+          property: {
+            ...r.property,
+            rentalStatus:
+              decision === "success"
+                ? "occupied"
+                : "available",
+          },
+        }
+      : r
+  )
+);
+
+    const propRes = await api.get(
+      `/api/properties/owner/${user.id}`
+    );
+
+    setProperties(propRes.data.properties || []);
+    const reqRes = await api.get("/api/requests/owner");
+
+setRequests(reqRes.data.requests || []);
+
+  } catch (err) {
+  console.log("ERROR STATUS:", err.response?.status);
+  console.log("ERROR DATA:", err.response?.data);
+  console.log("ERROR URL:", err.config?.url);
+}
+};
   // ---------------- STATS ----------------
   const summary = useMemo(() => ({
   total: properties.length,
@@ -207,32 +327,17 @@ if (files.idProof)
   ).length,
 }), [properties]);
 
+const hiddenProperties = properties.filter(
+  p => p.isHidden
+);
+
   return (
     <div style={styles.container}>
-
-      {/* SIDEBAR */}
-      <aside style={styles.sidebar}>
-        <h2 style={{ color: 'black' }}>LeaseFlow</h2>
-
-        {ownerNavigation.map(item => (
-          <button
-            key={item.id}
-            onClick={() => handleSelectSection(item.id)}
-            style={{
-              ...styles.navBtn,
-              background: activeSection === item.id ? '#4f46e5' : 'transparent',
-               color: activeSection === item.id ? 'white' : 'black'
-            }}
-          >
-            {item.icon} {item.label}
-          </button>
-        ))}
-      </aside>
 
       {/* MAIN */}
       <main style={styles.main}>
 
-        {activeSection === 'dashboard' && (
+        {path === '/owner-dashboard' && (
   <>
     <h2 style={{ marginBottom: "20px" }}>Owner Dashboard</h2>
 
@@ -297,7 +402,7 @@ if (files.idProof)
         }}
       >
         <h4 style={{ color: '#1f2937', fontWeight: 'normal' }}>
-  Available Properties
+  Hidden Properties
 </h4>
         <h2>{summary.hidden}</h2>
       </div>
@@ -306,155 +411,577 @@ if (files.idProof)
 )}
 
         {/* ADD PROPERTY */}
-        {activeSection === 'add' && (
-          <div style={styles.card}>
-            <h2>{selectedProperty ? "Edit Property" : "Add Property"}</h2>
-            {successMessage && (
-  <div
-    style={{
-      background: "#d1fae5",
-      color: "#065f46",
-      padding: "10px",
-      borderRadius: "6px",
-      marginBottom: "10px"
-    }}
-  >
-    {successMessage}
+{path === '/add-property' && (
+  <div style={styles.card}>
+    <h2>{selectedProperty ? "Edit Property" : "Add Property"}</h2>
+
+    {successMessage && (
+      <div
+        style={{
+          background: "#d1fae5",
+          color: "#065f46",
+          padding: "10px",
+          borderRadius: "6px",
+          marginBottom: "15px"
+        }}
+      >
+        {successMessage}
+      </div>
+    )}
+
+    <form
+      onSubmit={
+        selectedProperty
+          ? (e) => {
+              e.preventDefault();
+              handleUpdate();
+            }
+          : handleSave
+      }
+      style={styles.form}
+    >
+      <div style={styles.row}>
+        <input
+          style={styles.input}
+          placeholder="Title"
+          value={form.title}
+          onChange={(e) => handleChange("title", e.target.value)}
+        />
+
+        <select
+          style={styles.input}
+          value={form.propertyType}
+          onChange={(e) => handleChange("propertyType", e.target.value)}
+        >
+          {propertyTypes.map((t) => (
+            <option key={t}>{t}</option>
+          ))}
+        </select>
+      </div>
+
+      <div style={styles.row}>
+        <input
+          style={styles.input}
+          placeholder="Address"
+          value={form.address}
+          onChange={(e) => handleChange("address", e.target.value)}
+        />
+
+        <input
+          style={styles.input}
+          placeholder="City"
+          value={form.city}
+          onChange={(e) => handleChange("city", e.target.value)}
+        />
+      </div>
+
+      <div style={styles.row}>
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Rent"
+          value={form.rent}
+          onChange={(e) => handleChange("rent", e.target.value)}
+        />
+
+        <textarea
+          style={styles.input}
+          placeholder="Description"
+          value={form.description}
+          onChange={(e) => handleChange("description", e.target.value)}
+        />
+      </div>
+
+      <div style={styles.row}>
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Bedrooms"
+          value={form.bedrooms}
+          onChange={(e) => handleChange("bedrooms", e.target.value)}
+        />
+
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Bathrooms"
+          value={form.bathrooms}
+          onChange={(e) => handleChange("bathrooms", e.target.value)}
+        />
+      </div>
+
+      <div style={styles.row}>
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Latitude"
+          value={form.latitude}
+          onChange={(e) => handleChange("latitude", e.target.value)}
+        />
+
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Longitude"
+          value={form.longitude}
+          onChange={(e) => handleChange("longitude", e.target.value)}
+        />
+      </div>
+
+      <div style={styles.row}>
+        <div style={styles.fileBox}>
+          <label>Images</label>
+          <input
+            type="file"
+            multiple
+            onChange={(e) => handleFile("images", [...e.target.files])}
+          />
+        </div>
+
+        <div style={styles.fileBox}>
+          <label>Ownership Doc</label>
+          <input
+            type="file"
+            onChange={(e) => handleFile("ownershipDoc", e.target.files[0])}
+          />
+        </div>
+      </div>
+
+      <div style={styles.row}>
+        <div style={styles.fileBox}>
+          <label>Tax Doc</label>
+          <input
+            type="file"
+            onChange={(e) => handleFile("taxDoc", e.target.files[0])}
+          />
+        </div>
+
+        <div style={styles.fileBox}>
+          <label>ID Proof</label>
+          <input
+            type="file"
+            onChange={(e) => handleFile("idProof", e.target.files[0])}
+          />
+        </div>
+      </div>
+
+      <button style={styles.btn}>
+        {selectedProperty ? "Update" : "Save"}
+      </button>
+    </form>
   </div>
 )}
-            <form onSubmit={selectedProperty ? (e) => { e.preventDefault(); handleUpdate(); } : handleSave} style={styles.form}>
 
-              <div style={styles.row}>
-                <input style={styles.input} placeholder="Title" required
-                  value={form.title}
-                  onChange={(e) => handleChange("title", e.target.value)} />
+{/* PROPERTIES */}
+{path === "/my-properties" && (
+  <>
+    {updateMessage && (
+      <div
+        style={{
+          background: "#d1fae5",
+          color: "#065f46",
+          padding: "10px",
+          borderRadius: "6px",
+          marginBottom: "15px",
+        }}
+      >
+        {updateMessage}
+      </div>
+    )}
 
-                <select style={styles.input}
-                  value={form.propertyType}
-                  onChange={(e) => handleChange("propertyType", e.target.value)}>
-                  {propertyTypes.map(t => <option key={t}>{t}</option>)}
-                </select>
-              </div>
+    {isEditMode && selectedProperty && (
+      <div style={styles.card}>
+        <h2>Edit Property</h2>
 
-              <div style={styles.row}>
-                <input style={styles.input} placeholder="Address" required
-                  value={form.address}
-                  onChange={(e) => handleChange("address", e.target.value)} />
-
-                <input style={styles.input} placeholder="City"
-                  value={form.city}
-                  onChange={(e) => handleChange("city", e.target.value)} />
-              </div>
-
-              <div style={styles.row}>
-                <input style={styles.input} type="number" placeholder="Rent" required
-                  value={form.rent}
-                  onChange={(e) => handleChange("rent", e.target.value)} />
-
-                <textarea style={styles.input} placeholder="Description" required
-                  value={form.description}
-                  onChange={(e) => handleChange("description", e.target.value)} />
-              </div>
-
-              <div style={styles.row}>
-                <input style={styles.input} type="number" placeholder="Latitude" required
-                  value={form.latitude}
-                  onChange={(e) => handleChange("latitude", e.target.value)} />
-
-                <input style={styles.input} type="number" placeholder="Longitude" required
-                  value={form.longitude}
-                  onChange={(e) => handleChange("longitude", e.target.value)} />
-              </div>
-
-              {/* FILES */}
-              <div style={styles.row}>
-                <div style={styles.fileBox}>
-                  <label>Images</label>
-                  <input type="file" multiple required
-                    onChange={(e) => handleFile("images", [...e.target.files])} />
-                </div>
-
-                <div style={styles.fileBox}>
-                  <label>Ownership Doc</label>
-                  <input type="file" required
-                    onChange={(e) => handleFile("ownershipDoc", e.target.files[0])} />
-                </div>
-              </div>
-
-              <div style={styles.row}>
-                <div style={styles.fileBox}>
-                  <label>Tax Doc</label>
-                  <input type="file" required
-                    onChange={(e) => handleFile("taxDoc", e.target.files[0])} />
-                </div>
-
-                <div style={styles.fileBox}>
-                  <label>ID Proof</label>
-                  <input type="file" required
-                    onChange={(e) => handleFile("idProof", e.target.files[0])} />
-                </div>
-              </div>
-
-              <button style={styles.btn}>
-                {selectedProperty ? "Update" : "Save"}
-              </button>
-
-            </form>
-          </div>
-        )}
-
-        {/* PROPERTIES */}
-        {activeSection === 'properties' && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleUpdate();
+          }}
+          style={styles.form}
+        >
+          <div style={styles.row}>
   <div
     style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-      gap: '20px',
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      gap: "5px",
     }}
   >
-    {Array.isArray(properties) &&
-      properties.map((p, index) => (
-        <div key={p?._id || index} style={styles.card}>
-          <h3>{p?.title}</h3>
-          <p>{p?.propertyType}</p>
-          <p>₹{p?.rent}</p>
+    <label>Title</label>
+    <input
+      style={styles.input}
+      value={form.title}
+      onChange={(e) => handleChange("title", e.target.value)}
+    />
+  </div>
 
-          {p?.isHidden && (
-            <p style={{ color: 'red' }}>Hidden</p>
-          )}
+  <div
+    style={{
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      gap: "5px",
+    }}
+  >
+    <label>Property Type</label>
+    <select
+      style={styles.input}
+      value={form.propertyType}
+      onChange={(e) => handleChange("propertyType", e.target.value)}
+    >
+      {propertyTypes.map((t) => (
+        <option key={t}>{t}</option>
+      ))}
+    </select>
+  </div>
+</div>
 
-          <button
-            onClick={() => {
-              setSelectedProperty(p);
+          <div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>Address</label>
+    <input
+      style={styles.input}
+      value={form.address}
+      onChange={(e) => handleChange("address", e.target.value)}
+    />
+  </div>
 
-              setForm({
-                title: p.title || "",
-                propertyType: p.propertyType || "Apartment",
-                address: p.address || "",
-                city: p.city || "",
-                rent: p.rent || "",
-                description: p.description || "",
-                latitude: p.latitude || "",
-                longitude: p.longitude || ""
-              });
+  <div style={styles.fieldGroup}>
+    <label>City</label>
+    <input
+      style={styles.input}
+      value={form.city}
+      onChange={(e) => handleChange("city", e.target.value)}
+    />
+  </div>
+</div>
 
-              setActiveSection("add");
+          <div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>Rent</label>
+    <input
+      style={styles.input}
+      type="number"
+      value={form.rent}
+      onChange={(e) => handleChange("rent", e.target.value)}
+    />
+  </div>
+
+  <div style={styles.fieldGroup}>
+    <label>Description</label>
+    <textarea
+      style={styles.input}
+      value={form.description}
+      onChange={(e) => handleChange("description", e.target.value)}
+    />
+  </div>
+</div>
+
+          <div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>Bedrooms</label>
+    <input
+      style={styles.input}
+      type="number"
+      value={form.bedrooms}
+      onChange={(e) => handleChange("bedrooms", e.target.value)}
+    />
+  </div>
+
+  <div style={styles.fieldGroup}>
+    <label>Bathrooms</label>
+    <input
+      style={styles.input}
+      type="number"
+      value={form.bathrooms}
+      onChange={(e) => handleChange("bathrooms", e.target.value)}
+    />
+  </div>
+</div>
+
+          <div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>Latitude</label>
+    <input
+      style={styles.input}
+      type="number"
+      value={form.latitude}
+      onChange={(e) => handleChange("latitude", e.target.value)}
+    />
+  </div>
+
+  <div style={styles.fieldGroup}>
+    <label>Longitude</label>
+    <input
+      style={styles.input}
+      type="number"
+      value={form.longitude}
+      onChange={(e) => handleChange("longitude", e.target.value)}
+    />
+  </div>
+</div>
+
+          {/* Images */}
+          <div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>Property Images</label>
+    <input
+      type="file"
+      multiple
+      onChange={(e) =>
+        handleFile("images", [...e.target.files])
+      }
+    />
+  </div>
+
+  <div style={styles.fieldGroup}>
+    <label>Ownership Document</label>
+    <input
+      type="file"
+      onChange={(e) =>
+        handleFile("ownershipDoc", e.target.files[0])
+      }
+    />
+  </div>
+</div>
+
+          {/* Documents */}
+          <div style={styles.row}>
+  <div style={styles.fieldGroup}>
+    <label>Tax Document</label>
+    <input
+      type="file"
+      onChange={(e) =>
+        handleFile("taxDoc", e.target.files[0])
+      }
+    />
+  </div>
+
+  <div style={styles.fieldGroup}>
+    <label>ID Proof</label>
+    <input
+      type="file"
+      onChange={(e) =>
+        handleFile("idProof", e.target.files[0])
+      }
+    />
+  </div>
+</div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginTop: "15px",
             }}
           >
-            Edit
-          </button>
+            <button
+              type="submit"
+              style={styles.btn}
+            >
+              Update Property
+            </button>
 
-          <button onClick={() => handleDelete(p._id)}>
-            Delete
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditMode(false);
+                setSelectedProperty(null);
+                setForm(initialForm);
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    )}
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fit, minmax(300px, 1fr))",
+        gap: "20px",
+      }}
+    >
+      {Array.isArray(properties) &&
+      properties.length > 0 ? (
+        properties
+  .filter((p) => !p.isHidden)
+  .map((p) => (
+          <div key={p._id} style={styles.card}>
+            <h3>{p.title}</h3>
+
+            <p>
+              <strong>Type:</strong>{" "}
+              {p.propertyType}
+            </p>
+
+            <p>
+              <strong>City:</strong> {p.city}
+            </p>
+
+            <p>
+              <strong>Rent:</strong> ₹{p.rent}
+            </p>
+
+            <p>
+              <strong>Bedrooms:</strong>{" "}
+              {p.bedrooms}
+            </p>
+
+            <p>
+              <strong>Bathrooms:</strong>{" "}
+              {p.bathrooms}
+            </p>
+
+            <p>
+              <strong>Status:</strong>{" "}
+              {p.rentalStatus}
+            </p>
+
+            {p.isHidden && (
+              <p style={{ color: "red" }}>
+                Hidden Property
+              </p>
+            )}
+
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                marginTop: "10px",
+              }}
+            >
+              <button
+                onClick={() => {
+                  setSelectedProperty(p);
+                  setIsEditMode(true);
+
+                  setForm({
+                    title: p.title || "",
+                    propertyType:
+                      p.propertyType ||
+                      "Apartment",
+                    address: p.address || "",
+                    city: p.city || "",
+                    rent: p.rent || "",
+                    description:
+                      p.description || "",
+                    bedrooms:
+                      p.bedrooms || "",
+                    bathrooms:
+                      p.bathrooms || "",
+                    latitude:
+                      p.latitude || "",
+                    longitude:
+                      p.longitude || "",
+                  });
+
+                  setFiles({
+                    images: [],
+                    ownershipDoc: null,
+                    taxDoc: null,
+                    idProof: null,
+                  });
+                }}
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={() =>
+                  handleDelete(p._id)
+                }
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div
+          style={{
+            gridColumn: "1 / -1",
+            textAlign: "center",
+            padding: "40px",
+            color: "#6b7280",
+          }}
+        >
+          🏠 No properties available
         </div>
-      ))}
+      )}
+    </div>
+  </>
+)}
+{/* HIDDEN PROPERTIES */}
+{path === "/hidden-properties" && (
+  <div>
+    <h2>Completed Deals</h2>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fit, minmax(300px, 1fr))",
+        gap: "20px",
+        marginTop: "20px",
+      }}
+    >
+      {hiddenProperties.length > 0 ? (
+        hiddenProperties.map((p) => (
+          <div key={p._id} style={styles.card}>
+            <h3>{p.title}</h3>
+
+            <p>
+              <strong>City:</strong> {p.city}
+            </p>
+
+            <p>
+              <strong>Rent:</strong> ₹{p.rent}
+            </p>
+
+            <button
+              onClick={() => handleUnhideProperty(p._id)}
+            >
+              Unhide Property
+            </button>
+          </div>
+        ))
+      ) : (
+        <div
+          style={{
+            gridColumn: "1 / -1",
+            textAlign: "center",
+            padding: "40px",
+            color: "#6b7280",
+          }}
+        >
+          🏠 No completed deals available
+        </div>
+      )}
+    </div>
   </div>
 )}
-
         {/* REQUESTS */}
-        {activeSection === 'requests' && (
+        {path === '/tenant-requests' && (
   <div>
+    {dealMessage && (
+  <div
+    style={{
+      background: "#dcfce7",
+      color: "#166534",
+      padding: "10px",
+      borderRadius: "6px",
+      marginBottom: "15px"
+    }}
+  >
+    {dealMessage}
+  </div>
+)}
     <h2>Requests</h2>
 
     <div
@@ -469,18 +996,55 @@ if (files.idProof)
         <div key={r._id} style={styles.card}>
           <p><strong>Tenant:</strong> {r.tenant?.name}</p>
           <p><strong>Property:</strong> {r.property?.title}</p>
-          <p><strong>Status:</strong> {r.status}</p>
+          <p>
+  <strong>Status:</strong> {r.status}
+</p>
+          {r.status === "pending" && !r.showDealButton && (
+  <>
+    <button onClick={() => handleAccept(r._id)}>
+      Accept
+    </button>
 
-          <button onClick={() => handleAccept(r._id)}>
-            Accept
-          </button>
+    <button onClick={() => handleReject(r._id)}>
+      Reject
+    </button>
+    
+  </>
+)}
 
-          <button
-            onClick={() => handleReject(r._id)}
-            style={{ marginLeft: '10px' }}
-          >
-            Reject
-          </button>
+{r.showDealButton &&
+ r.property?.rentalStatus !== "occupied" && (
+  <div
+    style={{
+      display: "flex",
+      gap: "10px",
+      marginTop: "10px"
+    }}
+  >
+    <button
+      style={styles.btn}
+      onClick={() =>
+        handleFinalize(
+          r._id,
+          "success"
+        )
+      }
+    >
+      Deal Completed
+    </button>
+
+    <button
+      onClick={() =>
+        handleFinalize(
+          r._id,
+          "fail"
+        )
+      }
+    >
+      Deal Cancelled
+    </button>
+  </div>
+)}
         </div>
       ))}
     </div>
@@ -496,13 +1060,20 @@ export default OwnerDashboard;
 
 /* ---------------- STYLES ---------------- */
 const styles = {
-  container: { display: 'flex', minHeight: '100vh' },
-  sidebar: { width: '220px', padding: '20px', color: '#1f2937' },
+ container: { minHeight: '100vh' },
   navBtn: { width: '100%', padding: '10px', marginTop: '10px', color: 'white', border: 'none', textAlign: 'left' },
   main: { flex: 1, padding: '20px' },
   card: { background: '#f3f4f6', padding: '15px', marginBottom: '10px', borderRadius: '8px' },
   form: { display: 'flex', flexDirection: 'column', gap: '10px' },
   row: { display: 'flex', gap: '10px' },
+
+  fieldGroup: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px'
+  },
+
   input: { flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ccc' },
   fileBox: { flex: 1, display: 'flex', flexDirection: 'column', gap: '5px' },
   btn: { background: '#4f46e5', color: 'white', padding: '10px', border: 'none' }

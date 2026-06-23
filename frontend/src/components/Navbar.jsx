@@ -12,16 +12,19 @@ function Navbar() {
       : "/tenant-dashboard"
     : "/login";
 
+  const linkClass = ({ isActive }) =>
+    isActive ? "nav-link active fw-bold text-primary" : "nav-link";
+
   const renderTenantLinks = () => (
     <>
       <li className="nav-item">
-        <NavLink className="nav-link" to="/tenant-dashboard">
+        <NavLink className={linkClass} to="/tenant-dashboard">
           Dashboard
         </NavLink>
       </li>
 
       <li className="nav-item">
-        <NavLink className="nav-link" to="/properties">
+        <NavLink className={linkClass} to="/properties">
           Properties
         </NavLink>
       </li>
@@ -31,14 +34,32 @@ function Navbar() {
   const renderOwnerLinks = () => (
     <>
       <li className="nav-item">
-        <NavLink className="nav-link" to="/owner-dashboard">
+        <NavLink className={linkClass} to="/owner-dashboard">
           Dashboard
         </NavLink>
       </li>
 
       <li className="nav-item">
-        <NavLink className="nav-link" to="/properties">
-          Properties
+        <NavLink className={linkClass} to="/add-property">
+          Add Property
+        </NavLink>
+      </li>
+
+      <li className="nav-item">
+        <NavLink className={linkClass} to="/my-properties">
+          My Properties
+        </NavLink>
+      </li>
+
+      <li className="nav-item">
+        <NavLink className={linkClass} to="/hidden-properties">
+          Hidden Properties
+        </NavLink>
+      </li>
+
+      <li className="nav-item">
+        <NavLink className={linkClass} to="/tenant-requests">
+          Tenant Requests
         </NavLink>
       </li>
     </>
@@ -47,19 +68,19 @@ function Navbar() {
   const renderAdminLinks = () => (
     <>
       <li className="nav-item">
-        <NavLink className="nav-link" to="/admin-dashboard">
+        <NavLink className={linkClass} to="/admin-dashboard">
           Dashboard
         </NavLink>
       </li>
 
       <li className="nav-item">
-        <NavLink className="nav-link" to="/admin/verification-requests">
+        <NavLink className={linkClass} to="/admin/verification-requests">
           Verification Queue
         </NavLink>
       </li>
 
       <li className="nav-item">
-        <NavLink className="nav-link" to="/admin/all-properties">
+        <NavLink className={linkClass} to="/admin/all-properties">
           All Properties
         </NavLink>
       </li>
@@ -84,13 +105,12 @@ function Navbar() {
 
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav me-auto">
-            {user && (
-              <>
-                {user.role === "tenant" && renderTenantLinks()}
-                {user.role === "owner" && renderOwnerLinks()}
-                {user.role === "admin" && renderAdminLinks()}
-              </>
-            )}
+            {user &&
+              (user.role === "tenant"
+                ? renderTenantLinks()
+                : user.role === "owner"
+                ? renderOwnerLinks()
+                : renderAdminLinks())}
           </ul>
 
           <ul className="navbar-nav ms-auto align-items-center">

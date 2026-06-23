@@ -54,7 +54,15 @@ const propertySchema = new mongoose.Schema(
     longitude: {
         type: Number
     },
+bedrooms: {
+  type: Number,
+  required: true
+},
 
+bathrooms: {
+  type: Number,
+  required: true
+},
     // New Verification Documents
     taxDocument: {
         type: String
@@ -88,7 +96,10 @@ const propertySchema = new mongoose.Schema(
         type: Boolean,
         default: false
     },
-
+city: {
+  type: String,
+  required: true
+},
     ownerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

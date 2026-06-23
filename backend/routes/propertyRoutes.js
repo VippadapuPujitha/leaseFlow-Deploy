@@ -19,7 +19,8 @@ const {
   requestVerification,
   getAvailableProperties,
   searchProperties,
-  getOwnerStats
+  getOwnerStats,
+  unhideProperty
 } = require("../controllers/propertyController");
 
 /* ---------------- CREATE PROPERTY ---------------- */
@@ -64,4 +65,5 @@ router.put("/toggle-visibility/:id", authMiddleware,togglePropertyVisibility);
 
 /* ---------------- VERIFICATION ---------------- */
 router.put("/request-verification/:id", authMiddleware, requestVerification);
+router.patch("/unhide/:id", authMiddleware, unhideProperty);
 module.exports = router;

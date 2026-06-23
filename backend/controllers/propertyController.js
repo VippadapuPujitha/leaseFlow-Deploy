@@ -12,9 +12,12 @@ const createProperty = async (req, res) => {
     const property = await Property.create({
   title: req.body.title,
   address: req.body.address,
+  city: req.body.city,
   rent: req.body.rent,
   propertyType: req.body.propertyType,
   description: req.body.description,
+  bedrooms: req.body.bedrooms,
+bathrooms: req.body.bathrooms,
   latitude: req.body.latitude,
   longitude: req.body.longitude,
 
@@ -137,9 +140,7 @@ const getPropertyById = async (req, res) => {
 
 const updateProperty = async (req, res) => {
   try {
-    const property = await Property.findById(
-      req.params.id
-    );
+    const property = await Property.findById(req.params.id);
 
     if (!property) {
       return res.status(404).json({
@@ -147,17 +148,32 @@ const updateProperty = async (req, res) => {
         message: "Property not found"
       });
     }
+
     if (property.ownerId.toString() !== req.user.id) {
-  return res.status(403).json({
-    success: false,
-    message: "You can delete only your own property"
-  });
-}
+      return res.status(403).json({
+        success: false,
+        message: "You can edit only your own property"
+      });
+    }
+
+    property.title = req.body.title;
+    property.address = req.body.address;
+    property.city = req.body.city;
+    property.rent = req.body.rent;
+    property.propertyType = req.body.propertyType;
+    property.description = req.body.description;
+    property.bedrooms = req.body.bedrooms;
+property.bathrooms = req.body.bathrooms;
+    property.latitude = req.body.latitude;
+    property.longitude = req.body.longitude;
+
+    await property.save();
 
     res.status(200).json({
       success: true,
       property
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -285,6 +301,20 @@ if (property.verificationStatus !== "verified") {
     success: false,
     message: "Only verified properties can be finalized"
   });
+}
+if (decision === "success") {
+
+  request.status = "occupied";
+  request.contactShared = true;
+
+  request.property.rentalStatus = "occupied";
+  request.property.isHidden = true;
+
+  await request.property.save();
+}
+if (decision === "fail") {
+  request.status = "rejected";
+  request.contactShared = false;
 }
     property.rentalStatus = "occupied";
     property.isHidden = true;
@@ -547,6 +577,28 @@ const getOwnerStats = async (req, res) => {
     });
   }
 };
+
+const unhideProperty = async (req, res) => {
+  try {
+    const property = await Property.findByIdAndUpdate(
+      req.params.id,
+      {
+        isHidden: false,
+        rentalStatus: "available"
+      },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      property
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
+  }
+};
 module.exports = {
   createProperty,
   getAllProperties,
@@ -563,5 +615,6 @@ module.exports = {
   requestVerification,
   getAvailableProperties,
   searchProperties,
-  getOwnerStats
+  getOwnerStats,
+  unhideProperty
 };

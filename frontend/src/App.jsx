@@ -17,8 +17,9 @@ import PropertyDetail from './pages/PropertyDetail';
 import Profile from './pages/Profile';
 
 import SavedProperties from "./pages/SavedProperties";
-import { useAuth } from './hooks/useAuth';
 import Properties from "./pages/Properties";
+import { useAuth } from './hooks/useAuth';
+
 function App() {
   const { user } = useAuth();
 
@@ -29,174 +30,160 @@ function App() {
       <main className="container py-5">
         <Routes>
 
-          {/* Default Route */}
-          <Route
-            path="/"
-            element={
-              user ? (
-                <Navigate
-                  to={
-                    user.role === 'admin'
-                      ? '/admin-dashboard'
-                      : user.role === 'owner'
-                      ? '/owner-dashboard'
-                      : '/tenant-dashboard'
-                  }
-                  replace
-                />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
+  {/* Default Route */}
+  <Route
+    path="/"
+    element={
+      user ? (
+        <Navigate
+          to={
+            user.role === 'admin'
+              ? '/admin-dashboard'
+              : user.role === 'owner'
+              ? '/owner-dashboard'
+              : '/tenant-dashboard'
+          }
+          replace
+        />
+      ) : (
+        <Navigate to="/login" replace />
+      )
+    }
+  />
 
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+  {/* Auth */}
+  <Route path="/login" element={<Login />} />
+  <Route path="/register" element={<Register />} />
 
-          {/* Profile Route */}
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute roles={['tenant', 'owner', 'admin']}>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
+  {/* Dashboards */}
+  <Route
+    path="/tenant-dashboard"
+    element={
+      <ProtectedRoute roles={['tenant']}>
+        <TenantDashboard />
+      </ProtectedRoute>
+    }
+  />
 
-          {/* Tenant Dashboard */}
-          <Route
-            path="/tenant-dashboard"
-            element={
-              <ProtectedRoute roles={['tenant']}>
-                <TenantDashboard />
-              </ProtectedRoute>
-            }
-          />
+  <Route
+    path="/owner-dashboard"
+    element={
+      <ProtectedRoute roles={['owner']}>
+        <OwnerDashboard />
+      </ProtectedRoute>
+    }
+  />
 
-          {/* Owner Dashboard */}
-          <Route
-            path="/owner-dashboard"
-            element={
-              <ProtectedRoute roles={['owner']}>
-                <OwnerDashboard />
-              </ProtectedRoute>
-            }
-          />
+  <Route
+    path="/admin-dashboard"
+    element={
+      <ProtectedRoute roles={['admin']}>
+        <AdminDashboard />
+      </ProtectedRoute>
+    }
+  />
 
-          {/* Admin Dashboard */}
-          <Route
-            path="/admin-dashboard"
-            element={
-              <ProtectedRoute roles={['admin']}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
+  {/* OWNER ROUTES (IMPORTANT FIX) */}
+  <Route
+    path="/add-property"
+    element={
+      <ProtectedRoute roles={['owner']}>
+        <OwnerDashboard />
+      </ProtectedRoute>
+    }
+  />
 
-          <Route
-            path="/admin/verification-requests"
-            element={
-              <ProtectedRoute roles={['admin']}>
-                <VerificationRequests />
-              </ProtectedRoute>
-            }
-          />
+  <Route
+    path="/my-properties"
+    element={
+      <ProtectedRoute roles={['owner']}>
+        <OwnerDashboard />
+      </ProtectedRoute>
+    }
+  />
 
-          <Route
-            path="/admin/all-properties"
-            element={
-              <ProtectedRoute roles={['admin']}>
-                <AllProperties />
-              </ProtectedRoute>
-            }
-          />
+  <Route
+    path="/hidden-properties"
+    element={
+      <ProtectedRoute roles={['owner']}>
+        <OwnerDashboard />
+      </ProtectedRoute>
+    }
+  />
 
-          <Route
-            path="/admin/verification/:id"
-            element={
-              <ProtectedRoute roles={['admin']}>
-                <VerificationDetails />
-              </ProtectedRoute>
-            }
-          />
+  <Route
+    path="/tenant-requests"
+    element={
+      <ProtectedRoute roles={['owner']}>
+        <OwnerDashboard />
+      </ProtectedRoute>
+    }
+  />
 
-          <Route
-            path="/admin"
-            element={<Navigate to="/admin-dashboard" replace />}
-          />
+  {/* Admin */}
+  <Route
+    path="/admin/verification-requests"
+    element={
+      <ProtectedRoute roles={['admin']}>
+        <VerificationRequests />
+      </ProtectedRoute>
+    }
+  />
 
-          {/* Property List */}
-          <Route
-            path="/properties"
-            element={
-              <ProtectedRoute roles={['tenant', 'owner', 'admin']}>
-                <PropertyList />
-              </ProtectedRoute>
-            }
-          />
+  <Route
+    path="/admin/all-properties"
+    element={
+      <ProtectedRoute roles={['admin']}>
+        <AllProperties />
+      </ProtectedRoute>
+    }
+  />
 
-          {/* Property Details */}
-          <Route
-            path="/properties/:id"
-            element={
-              <ProtectedRoute roles={['tenant', 'owner', 'admin']}>
-                <PropertyDetail />
-              </ProtectedRoute>
-            }
-          />
+  <Route
+    path="/admin/verification/:id"
+    element={
+      <ProtectedRoute roles={['admin']}>
+        <VerificationDetails />
+      </ProtectedRoute>
+    }
+  />
 
-          {/* Requests */}
-          <Route
-            path="/requests"
-            element={
-              <ProtectedRoute roles={['tenant', 'owner']}>
-                <Navigate
-                  to={
-                    user?.role === 'owner'
-                      ? '/owner-dashboard'
-                      : '/tenant-dashboard'
-                  }
-                  replace
-                />
-              </ProtectedRoute>
-            }
-          />
+  {/* Properties */}
+  <Route
+    path="/properties"
+    element={
+      <ProtectedRoute roles={['tenant', 'owner', 'admin']}>
+        <PropertyList />
+      </ProtectedRoute>
+    }
+  />
 
-          {/* Users */}
-          <Route
-            path="/users"
-            element={
-              <ProtectedRoute roles={['admin']}>
-                <Navigate to="/admin-dashboard" replace />
-              </ProtectedRoute>
-            }
-          />
+  <Route
+    path="/properties/:id"
+    element={
+      <ProtectedRoute roles={['tenant', 'owner', 'admin']}>
+        <PropertyDetail />
+      </ProtectedRoute>
+    }
+  />
 
-          {/*SavedProperties */}
-          <Route
-            path="/saved-properties"
-            element={
-              <ProtectedRoute
-                roles={["tenant", "owner", "admin"]}
-              >
-                <SavedProperties />
-              </ProtectedRoute>
-            }
-          />
+  {/* Saved */}
+  <Route
+    path="/saved-properties"
+    element={
+      <ProtectedRoute roles={["tenant", "owner", "admin"]}>
+        <SavedProperties />
+      </ProtectedRoute>
+    }
+  />
 
+  {/* Redirects */}
+  <Route path="/admin" element={<Navigate to="/admin-dashboard" replace />} />
 
-          {/* Invalid Route */}
-          <Route
-            path="*"
-            element={<Navigate to="/login" replace />}
-          />
+  {/* Fallback */}
+  <Route path="*" element={<Navigate to="/" replace />} />
 
-
-          <Route path="*" element={<Navigate to="/login" replace />} />
-          <Route path="/properties" element={<Properties />} />
-
-        </Routes>
+</Routes>
       </main>
     </div>
   );
