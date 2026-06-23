@@ -54,7 +54,9 @@ const getAllProperties = async (req, res) => {
 
 const getVerificationQueue = async (req, res) => {
   try {
-    const properties = await Property.find({ verificationStatus: "pending" })
+    // Return properties that are awaiting admin review.
+    // Treat any property that is NOT 'verified' and NOT 'rejected' as pending review
+    const properties = await Property.find({ verificationStatus: { $nin: ["verified", "rejected"] } })
       .populate("ownerId", OWNER_FIELDS)
       .sort({ createdAt: -1 });
 

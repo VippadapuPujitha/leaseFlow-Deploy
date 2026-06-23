@@ -11,7 +11,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000
 
 const normalizeStatus = (status) => {
   const value = String(status || 'pending').toLowerCase();
-  return value === 'approved' ? 'verified' : value;
+  if (value === 'approved') return 'verified';
+  if (value === 'not_requested') return 'pending';
+  return value;
 };
 
 const getFileName = (value) => {
