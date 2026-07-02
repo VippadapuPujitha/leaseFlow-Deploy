@@ -265,20 +265,21 @@ const matchesLocation =
       </aside>
 
       <main className="dashboard-main">
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
-          <div>
-            <h1 className="page-title mb-2">Tenant Marketplace</h1>
-            <p className="page-subtitle">Browse rentals, manage your requests, and track active leases.</p>
-          </div>
-          <div className="text-end">
-            <span className="badge bg-primary-soft text-primary py-2 px-3">{summary.totalProperties} listings</span>
-          </div>
-        </div>
+        
 
         {error && <div className="alert alert-danger">{error}</div>}
 
         {activeSection === 'dashboard' && (
           <>
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+          <div>
+            <h1 className="page-title display-5 fw-bold mb-2">Tenant Marketplace</h1>
+            <p className="page-subtitle fs-5">Browse rentals, manage your requests, and track active leases.</p>
+          </div>
+          <div className="text-end">
+            <span className="badge bg-primary-soft text-primary py-2 px-3">{summary.totalProperties} listings</span>
+          </div>
+        </div>
             <div className="stat-grid mb-4">
               <div className="stat-card">
                 <div className="stat-card__title">Total properties</div>

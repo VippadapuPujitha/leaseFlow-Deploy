@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/axiosConfig";
+import "./Profile.css";
 
 function Profile() {
   const [user, setUser] = useState(null);
@@ -88,9 +89,25 @@ function Profile() {
 
   return (
     <div className="container mt-5">
-      <div className="card shadow-sm">
+      <div className="profile-card">
         <div className="card-body">
-          <h2 className="mb-4">My Profile</h2>
+          <div className="profile-header">
+
+    <div className="profile-avatar">
+        {user?.name?.charAt(0).toUpperCase()}
+    </div>
+
+    <div>
+
+        <h2>My Profile</h2>
+
+        <p>
+            Manage your account information.
+        </p>
+
+    </div>
+
+</div>
 
           {message && (
             <div className="alert alert-success">
@@ -111,7 +128,7 @@ function Profile() {
               </label>
               <input
                 type="text"
-                className="form-control"
+                className="profile-input"
                 value={name}
                 onChange={(e) =>
                   setName(e.target.value)
@@ -126,7 +143,7 @@ function Profile() {
               </label>
               <input
                 type="email"
-                className="form-control"
+                className="profile-input"
                 value={user?.email || ""}
                 disabled
               />
@@ -138,7 +155,7 @@ function Profile() {
               </label>
               <input
                 type="tel"
-                className="form-control"
+                className="profile-input"
                 value={phone}
                 onChange={(e) =>
                   setPhone(e.target.value)
@@ -153,7 +170,7 @@ function Profile() {
 
                 <input
                     type="text"
-                    className="form-control"
+                    className="profile-input"
                     value={
                     user?.role
                         ? user.role.charAt(0).toUpperCase() +
@@ -166,7 +183,7 @@ function Profile() {
 
             <button
               type="submit"
-              className="btn btn-primary"
+              className="save-btn"
               disabled={saving}
             >
               {saving
