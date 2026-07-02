@@ -44,6 +44,7 @@ exports.sendRentalRequest = async (req, res) => {
 };
 
 /* ================= VIEW MY REQUESTS ================= */
+/* ================= VIEW MY REQUESTS ================= */
 exports.viewMyRequests = async (req, res) => {
   try {
     const requests = await Request.find({
@@ -52,12 +53,30 @@ exports.viewMyRequests = async (req, res) => {
       .populate("property")
       .populate("owner", "name email phone");
 
+    // Remove requests whose property has been deleted
+    const filteredRequests = requests.filter(
+      (request) => request.property !== null
+    );
+
+    // (Optional) Permanently delete those orphan requests from DB
+    const deletedRequestIds = requests
+      .filter((request) => request.property === null)
+      .map((request) => request._id);
+
+    if (deletedRequestIds.length > 0) {
+      await Request.deleteMany({
+        _id: { $in: deletedRequestIds },
+      });
+    }
+
     return res.json({
       success: true,
-      requests,
+      requests: filteredRequests,
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      message: error.message,
+    });
   }
 };
 

@@ -433,44 +433,109 @@ const matchesLocation =
             <h2 className="mb-3">My Requests</h2>
             <p className="text-muted">Track request status and request details in one place.</p>
             <div className="table-responsive">
-              <table className="table align-middle">
-                <thead>
-                  <tr>
-                    <th>Property Name</th>
-                    <th>Owner Name</th>
-                    <th>Request Date</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requests.length ? (
-                    requests.map((request) => (
-                      <tr key={request._id}>
-                        <td>{request.property?.title}</td>
-<td>{request.owner?.name}</td>
-<td>{new Date(request.createdAt).toLocaleDateString()}</td>
-                        <td>
-  {statusLabels[request.status] || request.status}
+  <table
+    className="table align-middle"
+    style={{ width: "100%", tableLayout: "fixed" }}
+  >
+    <thead>
+      <tr>
+        <th style={{ width: "30%" }} className="text-start">
+          Property Name
+        </th>
 
-  {request.status === "pending" && (
-    <button
-      className="btn btn-sm btn-danger ms-2"
-      onClick={() => handleWithdraw(request._id)}
-    >
-      Withdraw
-    </button>
-  )}
-</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" className="text-center text-muted">No requests yet. Browse properties to submit your first request.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+        <th style={{ width: "15%" }} className="text-center">
+          Owner Name
+        </th>
+
+        <th style={{ width: "18%" }} className="text-center">
+          Contact
+        </th>
+
+        <th style={{ width: "17%" }} className="text-center">
+          Request Date
+        </th>
+
+        <th style={{ width: "20%" }} className="text-center">
+          Status
+        </th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {requests.length ? (
+        requests.map((request) => (
+          <tr key={request._id}>
+            <td className="text-start">
+              {request.property?.title || (
+                <span className="text-danger">
+                  Property Deleted
+                </span>
+              )}
+            </td>
+
+            <td className="text-center">
+              {request.owner?.name}
+            </td>
+
+            <td
+              className="text-center"
+              style={{ whiteSpace: "nowrap" }}
+            >
+              {request.owner?.phone || (
+                <span className="text-muted">
+                  Not Available
+                </span>
+              )}
+            </td>
+
+            <td className="text-center">
+              {new Date(
+                request.createdAt
+              ).toLocaleDateString()}
+            </td>
+
+            <td className="text-center">
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <span>
+                  {statusLabels[request.status] ||
+                    request.status}
+                </span>
+
+                {request.status === "pending" && (
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() =>
+                      handleWithdraw(request._id)
+                    }
+                  >
+                    Withdraw
+                  </button>
+                )}
+              </div>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td
+            colSpan="5"
+            className="text-center text-muted"
+          >
+            No requests yet. Browse properties to submit your
+            first request.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
           </div>
         )}
 

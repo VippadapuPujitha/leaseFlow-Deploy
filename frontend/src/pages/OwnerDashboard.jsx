@@ -204,7 +204,8 @@ const handleUpdate = async () => {
     r._id === id
       ? {
           ...r,
-          showDealButton: true
+          status: "pending",
+          showDealButton: true,
         }
       : r
   )
@@ -265,15 +266,15 @@ const handleUnhideProperty = async (id) => {
     await api.patch(`/api/requests/reject/${id}`);
 
     setRequests(prev =>
-      prev.map(r =>
-        r._id === id
-          ? {
-              ...r,
-              status: "rejected"
-            }
-          : r
-      )
-    );
+  prev.map(r =>
+    r._id === id
+      ? {
+          ...r,
+          status: "rejected"
+        }
+      : r
+  )
+);
 
     setRequestMessage("❌ Request rejected successfully");
 
