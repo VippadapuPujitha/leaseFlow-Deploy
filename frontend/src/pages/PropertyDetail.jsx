@@ -117,10 +117,10 @@ console.log("PROPERTY DETAILS:", property);
             <div className="property-card__media mb-4">
               {property.images ?.length>0? (
                 <img
-                  src={`http://localhost:5000/uploads/images/${property.images[0].split("\\").pop()}`}
-                  alt={title}
-                  className="img-fluid rounded-4"
-                />
+  src={property.images[0]}
+  alt={title}
+  className="img-fluid rounded-4"
+/>
               ) : (
                 <div className="display-6 fw-bold">
                   {title.split(' ').slice(0, 3).join(' ')}

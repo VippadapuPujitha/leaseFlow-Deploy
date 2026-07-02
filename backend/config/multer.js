@@ -1,35 +1,28 @@
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("./cloudinary");
 
-const imagePath = path.join(__dirname, "../uploads/images");
-const docPath = path.join(__dirname, "../uploads/documents");
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    let folder = "leaseflow/images";
 
-if (!fs.existsSync(imagePath)) {
-  fs.mkdirSync(imagePath, { recursive: true });
-}
-
-if (!fs.existsSync(docPath)) {
-  fs.mkdirSync(docPath, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    if (file.fieldname === "images") {
-      cb(null, imagePath);
-    } else {
-      cb(null, docPath);
+    // Store all documents separately
+    if (
+      file.fieldname === "taxDocument" ||
+      file.fieldname === "ownershipDocument" ||
+      file.fieldname === "taxReceipt" ||
+      file.fieldname === "aadhaarPan" ||
+      file.fieldname === "electricityBill"
+    ) {
+      folder = "leaseflow/documents";
     }
-  },
 
-  filename: function (req, file, cb) {
-    cb(
-      null,
-      Date.now() +
-        "-" +
-        Math.round(Math.random() * 1e9) +
-        path.extname(file.originalname)
-    );
+    return {
+      folder: folder,
+      resource_type: "auto",
+      public_id: `${Date.now()}-${file.originalname.split(".")[0]}`
+    };
   }
 });
 
