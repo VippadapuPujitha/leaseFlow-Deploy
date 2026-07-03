@@ -297,46 +297,25 @@ const finalizeRental = async (req, res) => {
     const property = await Property.findById(req.params.id);
 
     if (!property) {
-      return res.status(404).json({
-        success: false,
-        message: "Property not found"
-      });
+      return res.status(404).json({ success: false, message: "Property not found" });
     }
+
     if (property.ownerId.toString() !== req.user.id) {
-  return res.status(403).json({
-    success: false,
-    message: "You can finalize only your own property"
-  });
-}
-if (property.rentalStatus !== "available") {
-  return res.status(400).json({
-    success: false,
-    message: "Property is already occupied"
-  });
-}
-if (property.verificationStatus !== "verified") {
-  return res.status(400).json({
-    success: false,
-    message: "Only verified properties can be finalized"
-  });
-}
-if (decision === "success") {
+      return res.status(403).json({ success: false, message: "You can finalize only your own property" });
+    }
 
-  request.status = "occupied";
-  request.contactShared = true;
+    if (property.rentalStatus !== "available") {
+      return res.status(400).json({ success: false, message: "Property is already occupied" });
+    }
 
-  request.property.rentalStatus = "occupied";
-  request.property.isHidden = true;
+    if (property.verificationStatus !== "verified") {
+      return res.status(400).json({ success: false, message: "Only verified properties can be finalized" });
+    }
 
-  await request.property.save();
-}
-if (decision === "fail") {
-  request.status = "rejected";
-  request.contactShared = false;
-}
     property.rentalStatus = "occupied";
     property.isHidden = true;
-    property.status="LOCKED";
+    property.status = "LOCKED";
+
     await property.save();
 
     res.status(200).json({
@@ -344,11 +323,9 @@ if (decision === "fail") {
       message: "Property marked as occupied",
       property
     });
+
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 const togglePropertyVisibility = async (req, res) => {
@@ -599,13 +576,14 @@ const getOwnerStats = async (req, res) => {
 const unhideProperty = async (req, res) => {
   try {
     const property = await Property.findByIdAndUpdate(
-      req.params.id,
-      {
-        isHidden: false,
-        rentalStatus: "available"
-      },
-      { new: true }
-    );
+  req.params.id,
+  {
+    isHidden: false,
+    rentalStatus: "available",
+    status: "ACTIVE"
+  },
+  { new: true }
+);
 
     res.json({
       success: true,

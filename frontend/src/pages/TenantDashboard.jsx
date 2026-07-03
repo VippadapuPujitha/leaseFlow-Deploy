@@ -43,7 +43,7 @@ function TenantDashboard() {
   });
   const [profileMessage, setProfileMessage] = useState('');
   const [profileError, setProfileError] = useState('');
-
+  const [requestMessage, setRequestMessage] = useState("");
   const fetchSavedProperties = async () => {
     try {
       const response = await api.get(
@@ -106,8 +106,9 @@ const handleWithdraw = async (requestId) => {
     try {
       const response = await api.get('/api/properties');
       const data = response.data;
-
+      console.log("API RESPONSE:", data.properties);
       setProperties(data.properties || data || []);
+      console.log("PROPERTIES STATE:", data.properties || data || []);
     } catch (err) {
       setError('Unable to load properties at this time.');
     } finally {
@@ -177,10 +178,10 @@ const matchesLocation =
   const handleSendRequest = async (property) => {
   try {
     const payload = {
-      propertyId: property._id || property.id
+      propertyId: property._id || property.id,
     };
 
-    const response = await api.post('/api/requests/send', payload);
+    const response = await api.post("/api/requests/send", payload);
 
     const request = response.data.request || response.data;
 
@@ -188,15 +189,40 @@ const matchesLocation =
       ...prev,
       {
         id: request._id || request.id || `REQ-${prev.length + 100}`,
-        propertyName: property.title || property.name || 'Property',
-        ownerName: property.ownerName || property.owner || 'Owner',
-        date: new Date().toISOString().split('T')[0],
-        status: 'Pending',
+        propertyName: property.title || property.name || "Property",
+        ownerName: property.ownerName || property.owner || "Owner",
+        date: new Date().toISOString().split("T")[0],
+        status: "Pending",
       },
     ]);
+
+    // Show success message
+    setRequestMessage("✅ Property request sent successfully.");
+
+    // Scroll to top
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+
+    // Hide message after 3 seconds
+    setTimeout(() => {
+      setRequestMessage("");
+    }, 3000);
+
   } catch (err) {
     console.log(err.response?.data);
-    setError('Unable to submit request.');
+
+    setRequestMessage(
+      err.response?.data?.message || "Unable to submit request."
+    );
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+
+
   }
 };
 
@@ -317,7 +343,25 @@ const matchesLocation =
                 <p className="text-muted">Modern rental listings with filters and quick request actions.</p>
               </div>
             </div>
-
+            {requestMessage && (
+  <div
+    style={{
+      position: "fixed",
+      top: "20px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      background: "#4CAF50",
+      color: "white",
+      padding: "12px 25px",
+      borderRadius: "8px",
+      fontWeight: "600",
+      zIndex: 9999,
+      boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+    }}
+  >
+    {requestMessage}
+  </div>
+)}
             <div className="card card-glass mb-4 p-4">
               <div className="row gy-3">
                 <div className="col-md-4">
@@ -355,73 +399,127 @@ const matchesLocation =
             </div>
 
             {loading ? (
-              <div className="alert alert-info">Loading marketplace...</div>
-            ) : (
-              <div className="property-grid">
-                {filteredProperties.length ? (
-                  filteredProperties.map((property) => {
-                    const title = property.title || property.name || 'Property';
-                    const address =
-  `${property.address || property.location || ""}${
-    property.city ? `, ${property.city}` : ""
-  }` || "Location not available";
-                    const rent = property.rent || property.monthlyRent || 'N/A';
-                    const description = property.description || 'A modern rental with great amenities.';
-                    const status = property.status || 'Available';
-                    return (
-                      <article key={property._id || property.id || title} className="property-card">
-                        <div className="property-card__media">{status}</div>
-                        <div className="property-card__body">
-                          <h5>{title}</h5>
-                          <p className="text-muted mb-2">{address}</p>
-                          <p className="text-muted mb-3">{description.slice(0, 110)}</p>
-                          <div className="property-card__meta">
-                            <span>{typeof rent === 'number' ? `₹${rent}/mo` : rent}</span>
-                            <span className="property-badge">{status}</span>
-                          </div>
-                        </div>
-                        <div className="property-card__footer d-flex gap-2 flex-wrap">
-                        <Link
-                          className="btn btn-outline-primary btn-sm flex-grow-1"
-                          to={`/properties/${property._id || property.id}`}
-                        >
-                          View Details
-                        </Link>
+  <div className="alert alert-info">
+    Loading marketplace...
+  </div>
+) : (
+  <>
 
-                        <button
-                            type="button"
-                            className="btn btn-outline-success btn-sm flex-grow-1"
-                            disabled={savedProperties.some(
-                              (id) => String(id) === String(property._id || property.id)
-                            )}
-                            onClick={() =>
-                              handleSaveProperty(property._id || property.id)
-                            }
-                          >
-                            {savedProperties.some(
-                              (id) => String(id) === String(property._id || property.id)
-                            )
-                              ? "Saved ✓"
-                              : "Save Property"}
-                          </button>
+    <div className="property-grid">
+      {filteredProperties.length ? (
+        filteredProperties.map((property) => {
+          console.log(
+            "Rendering:",
+            property.title,
+            property.status,
+            property.isHidden,
+            property.rentalStatus
+          );
 
-                        <button
-                          type="button"
-                          className="btn btn-gradient btn-sm flex-grow-1"
-                          onClick={() => handleSendRequest(property)}
-                        >
-                          Request Property
-                        </button>
-                      </div>
-                         
-                      </article>
-                    );
-                  })
-                ) : (
-                  <div className="alert alert-light">No matching properties found. Try broadening your filters.</div>
-                )}
+          const title =
+            property.title || property.name || "Property";
+
+          const address =
+            `${property.address || property.location || ""}${
+              property.city ? `, ${property.city}` : ""
+            }` || "Location not available";
+
+          const rent =
+            property.rent || property.monthlyRent || "N/A";
+
+          const description =
+            property.description ||
+            "A modern rental with great amenities.";
+
+          const status =
+            property.status || "Available";
+
+          return (
+            <article
+              key={property._id || property.id || title}
+              className="property-card"
+            >
+              <div className="property-card__media">
+                {status}
               </div>
-            )}
+
+              <div className="property-card__body">
+                <h5>{title}</h5>
+
+                <p className="text-muted mb-2">
+                  {address}
+                </p>
+
+                <p className="text-muted mb-3">
+                  {description.slice(0, 110)}
+                </p>
+
+                <div className="property-card__meta">
+                  <span>
+                    {typeof rent === "number"
+                      ? `₹${rent}/mo`
+                      : rent}
+                  </span>
+
+                  <span className="property-badge">
+                    {status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="property-card__footer d-flex gap-2 flex-wrap">
+                <Link
+                  className="btn btn-outline-primary btn-sm flex-grow-1"
+                  to={`/properties/${property._id || property.id}`}
+                >
+                  View Details
+                </Link>
+
+                <button
+                  type="button"
+                  className="btn btn-outline-success btn-sm flex-grow-1"
+                  disabled={savedProperties.some(
+                    (id) =>
+                      String(id) ===
+                      String(property._id || property.id)
+                  )}
+                  onClick={() =>
+                    handleSaveProperty(
+                      property._id || property.id
+                    )
+                  }
+                >
+                  {savedProperties.some(
+                    (id) =>
+                      String(id) ===
+                      String(property._id || property.id)
+                  )
+                    ? "Saved ✓"
+                    : "Save Property"}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-gradient btn-sm flex-grow-1"
+                  onClick={() =>
+                    handleSendRequest(property)
+                  }
+                >
+                  Request Property
+                </button>
+              </div>
+            </article>
+          );
+        })
+      ) : (
+        <div className="alert alert-light">
+          No matching properties found. Try broadening your
+          filters.
+        </div>
+      )}
+    </div>
+  </>
+)}
           </>
         )}
 

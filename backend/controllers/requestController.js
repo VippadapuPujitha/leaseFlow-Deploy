@@ -107,19 +107,17 @@ exports.acceptRequest = async (req, res) => {
       return res.status(404).json({ message: "Request not found" });
     }
 
-    request.status = "accepted";
+    // Keep the request pending for the tenant
+    request.ownerAccepted = true;
+
+    // Share contact details immediately
     request.contactShared = true;
 
     await request.save();
 
-    await Property.findByIdAndUpdate(request.property, {
-      rentalStatus: "occupied",
-      status: "LOCKED",
-    });
-
     return res.json({
       success: true,
-      message: "Request accepted and contact shared",
+      message: "Contact shared. Waiting for deal completion.",
       request,
     });
   } catch (error) {
@@ -229,21 +227,24 @@ exports.finalizeDeal = async (req, res) => {
     }
 
     if (decision === "success") {
-      request.status = "accepted";
-      request.contactShared = true;
+    request.status = "accepted";
+    request.ownerAccepted = false;
+    request.contactShared = true;
 
-      await Property.findByIdAndUpdate(request.property._id, {
-        rentalStatus: "occupied",
-        isHidden: true,
-        status: "LOCKED",
-      });
-    } else {
-      request.status = "cancelled";
+    await Property.findByIdAndUpdate(request.property._id, {
+    rentalStatus: "rented",
+    isHidden: true,
+    status: "LOCKED",
+});
 
-      await Property.findByIdAndUpdate(request.property._id, {
+} else {
+    request.status = "cancelled";
+    request.ownerAccepted = false;
+
+    await Property.findByIdAndUpdate(request.property._id, {
         rentalStatus: "available",
-      });
-    }
+    });
+}
 
     await request.save();
 

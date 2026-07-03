@@ -13,10 +13,13 @@ const requestSchema = new mongoose.Schema(
       ref: "Property",
       required: true,
     },
-    
+    ownerAccepted: {
+  type: Boolean,
+  default: false,
+},
     status: {
       type: String,
-      enum: ["pending", "accepted", "rejected","withdrawn"],
+      enum: ["pending", "accepted", "rejected","cancelled","withdrawn"],
       default: "pending",
     },
     owner: {

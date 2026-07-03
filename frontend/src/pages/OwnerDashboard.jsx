@@ -32,8 +32,8 @@ console.log("CURRENT PATH:", path);
   const [successMessage, setSuccessMessage] = useState('');
 const [errorMessage, setErrorMessage] = useState('');
 const [dealMessage, setDealMessage] = useState('');
-const [updateMessage, setUpdateMessage] = useState("");
-const [requestMessage, setRequestMessage] = useState("");
+const [notification, setNotification] = useState("");
+const [notificationType, setNotificationType] = useState("success");
 const [deleteMessage, setDeleteMessage] = useState("");
 const [isEditMode, setIsEditMode] = useState(false);
 const [files, setFiles] = useState({
@@ -85,6 +85,20 @@ const [files, setFiles] = useState({
 
   fetchRequests();
 }, [path]);
+
+const showNotification = (message, type = "success") => {
+  setNotification(message);
+  setNotificationType(type);
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+
+  setTimeout(() => {
+    setNotification("");
+  }, 3000);
+};
 
   // ---------------- FORM HANDLERS ----------------
   const handleChange = (key, value) => {
@@ -144,7 +158,7 @@ console.log("FORM:", form);
 
       setForm(initialForm);
       setFiles({ images: [], ownershipDoc: null, taxDoc: null, idProof: null });
-      setSuccessMessage('Property added successfully!');
+      showNotification("✅ Property added successfully!");
     } catch (err) {
   console.log("ERROR:", err);
   console.log("RESPONSE:", err.response?.data);
@@ -164,7 +178,7 @@ const handleUpdate = async () => {
 
     console.log(res.data);
 
-    setUpdateMessage("Property updated successfully");
+    showNotification("✅ Property updated successfully!");
     setIsEditMode(false);
 
     fetchProperties(); // reload properties
@@ -199,23 +213,20 @@ const handleUpdate = async () => {
   try {
     await api.patch(`/api/requests/accept/${id}`);
 
-    setRequests(prev =>
+  setRequests(prev =>
   prev.map(r =>
     r._id === id
       ? {
           ...r,
           status: "pending",
-          showDealButton: true,
+          ownerAccepted: true,
+          contactShared: true,
         }
       : r
   )
 );
 
-    setRequestMessage("✅ Request accepted successfully!");
-
-    setTimeout(() => {
-      setRequestMessage("");
-    }, 3000);
+    showNotification("✅ Request accepted successfully!");
 
   } catch (err) {
     console.log(err);
@@ -254,6 +265,7 @@ const handleUnhideProperty = async (id) => {
           : p
       )
     );
+    showNotification("✅ Unhide Successfully!");
   } catch (err) {
     console.log("UNHIDE ERROR:", err);
     console.log("STATUS:", err.response?.status);
@@ -297,36 +309,20 @@ const handleUnhideProperty = async (id) => {
 console.log("FINALIZE RESPONSE:", res.data);
 
     if (decision === "success") {
-      setDealMessage(
-        "Deal completed successfully. Property moved to Hidden Properties."
-      );
+      showNotification("🎉 Deal completed successfully!");
     } else {
-      setDealMessage(
-        "Deal cancelled successfully."
-      );
+      showNotification("Deal cancelled!");
     }
-
    setRequests(prev =>
-  prev.map(r =>
-    r._id === id
-      ? {
-          ...r,
-          status:
-            decision === "success"
-              ? "occupied"
-              : "cancelled",
-          finalStatus: decision,
-          showDealButton: false,
-          property: {
-            ...r.property,
-            rentalStatus:
-              decision === "success"
-                ? "occupied"
-                : "available",
-          },
-        }
-      : r
-  )
+    prev.map(r =>
+        r._id === id
+            ? {
+                  ...r,
+                  status: decision === "success" ? "accepted" : "cancelled",
+                  ownerAccepted: false,
+              }
+            : r
+    )
 );
 
     const propRes = await api.get(
@@ -367,6 +363,26 @@ const hiddenProperties = properties.filter(
 
       {/* MAIN */}
       <main style={styles.main}>
+        {notification && (
+  <div
+    style={{
+      position: "fixed",
+      top: "20px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      backgroundColor:
+        notificationType === "success" ? "#22c55e" : "#ef4444",
+      color: "#fff",
+      padding: "12px 24px",
+      borderRadius: "8px",
+      fontWeight: "600",
+      zIndex: 9999,
+      boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+    }}
+  >
+    {notification}
+  </div>
+)}
 
         {path === '/owner-dashboard' && (
   <>
@@ -683,17 +699,6 @@ const hiddenProperties = properties.filter(
 {/* PROPERTIES */}
 {path === "/my-properties" && (
   <>
-    {updateMessage && (
-      <div style={{
-        background: "#d1fae5",
-        color: "#065f46",
-        padding: "10px",
-        borderRadius: "6px",
-        marginBottom: "15px",
-      }}>
-        {updateMessage}
-      </div>
-    )}
 
     {isEditMode && selectedProperty && (
       <div style={styles.card}>
@@ -995,30 +1000,7 @@ const hiddenProperties = properties.filter(
 )}
 {path === "/tenant-requests" && (
   <div>
-    {dealMessage && (
-      <div style={{
-        background: "#dcfce7",
-        color: "#166534",
-        padding: "10px",
-        borderRadius: "6px",
-        marginBottom: "15px"
-      }}>
-        {dealMessage}
-      </div>
-    )}
-    {requestMessage && (
-  <div
-    style={{
-      background: "#dcfce7",
-      color: "#166534",
-      padding: "10px",
-      borderRadius: "6px",
-      marginBottom: "15px"
-    }}
-  >
-    {requestMessage}
-  </div>
-)}
+    
 
     <h2>Tenant Requests</h2>
 
@@ -1033,28 +1015,29 @@ const hiddenProperties = properties.filter(
           <p><b>Property:</b> {r.property?.title}</p>
           <p><b>Status:</b> {r.status}</p>
 
-          {r.status === "pending" && !r.showDealButton && (
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={() => handleAccept(r._id)}>
-                Accept
-              </button>
+          {r.status === "pending" && !r.ownerAccepted && (
+  <>
+    <button onClick={() => handleAccept(r._id)}>
+      Accept
+    </button>
 
-              <button onClick={() => handleReject(r._id)}>
-                Reject
-              </button>
-            </div>
-          )}
+    <button onClick={() => handleReject(r._id)}>
+      Reject
+    </button>
+  </>
+)}
 
-          {r.status === "accepted" && r.showDealButton && (
-  <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+          {r.ownerAccepted && (
+  <div>
     <button
       style={styles.btn}
       onClick={() => handleFinalize(r._id, "success")}
     >
-      Deal Completed
+      Deal Successful
     </button>
 
     <button
+      style={styles.deleteBtn}
       onClick={() => handleFinalize(r._id, "fail")}
     >
       Deal Cancelled
