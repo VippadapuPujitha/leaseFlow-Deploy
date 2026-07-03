@@ -2,7 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLocation } from "react-router-dom";
+import OwnerSidebar from '../components/OwnerSidebar';
 import "./OwnerDashboard.css";
+
+import {
+  FiHome,
+  FiCheckCircle,
+  FiLock,
+  FiEyeOff
+} from "react-icons/fi";
 
 const propertyTypes = ['Apartment', 'House', 'Villa', 'Office', 'Shop'];
 const initialForm = {
@@ -37,6 +45,7 @@ const [updateMessage, setUpdateMessage] = useState("");
 const [requestMessage, setRequestMessage] = useState("");
 const [deleteMessage, setDeleteMessage] = useState("");
 const [isEditMode, setIsEditMode] = useState(false);
+const [filter, setFilter] = useState("all");
 const [files, setFiles] = useState({
   images: [],
   ownershipDoc: null,
@@ -299,8 +308,8 @@ console.log("FINALIZE RESPONSE:", res.data);
 
     if (decision === "success") {
       setDealMessage(
-        "Deal completed successfully. Property moved to Hidden Properties."
-      );
+  "Deal completed successfully. Property has been marked as hidden."
+);
     } else {
       setDealMessage(
         "Deal cancelled successfully."
@@ -364,123 +373,158 @@ const hiddenProperties = properties.filter(
 );
 
   return (
-    <div style={styles.container}>
+    <div style={styles.pageWrapper}>
+      {/* Sidebar and Main Content in Flex Layout */}
+      <div style={styles.layoutContainer}>
+        <OwnerSidebar />
 
-      {/* MAIN */}
-      <main style={styles.main}>
+        {/* MAIN */}
+        <main style={styles.mainContent}>
 
         {path === "/owner-dashboard" && (
-  <div className="dashboard-page">
+          <>
+            <div className="dashboard-page">
 
-    <div className="dashboard-hero">
-      <div>
-        <h1>Welcome Back, {user?.name || "Jyo"} 👋</h1>
-        <p>
-          Manage your rental properties efficiently and track everything from
-          one place.
-        </p>
-      </div>
+              <div className="dashboard-hero">
+                <div>
+                  <h1>Welcome Back, {user?.name || "Jyo"} </h1>
+                  <p>
+                    Manage your rental properties efficiently and track everything from
+                    one place.
+                  </p>
+                </div>
 
-      <button
-        className="primary-btn"
-        onClick={() => (window.location.href = "/add-property")}
-      >
-        + Add Property
-      </button>
-    </div>
+                <button
+                  className="primary-btn"
+                  onClick={() => (window.location.href = "/add-property")}
+                >
+                  + Add Property
+                </button>
+              </div>
 
-    <div className="stats-grid">
+              <div className="stats-grid">
 
-      <div className="stat-card">
-        <div className="stat-icon blue">🏠</div>
-        <div>
-          <p>Total Properties</p>
-          <h2>{summary.total}</h2>
-        </div>
-      </div>
+                <div className="stat-card">
+                  <div className="stat-icon blue">
+    <FiHome />
+</div>
+                  <div>
+                    <p>Total Properties</p>
+                    <h2>{summary.total}</h2>
+                  </div>
+                </div>
 
-      <div className="stat-card">
-        <div className="stat-icon green">🟢</div>
-        <div>
-          <p>Available</p>
-          <h2>{summary.available}</h2>
-        </div>
-      </div>
+                <div className="stat-card">
+                  <div className="stat-icon green">
+    <FiCheckCircle />
+</div>
+                  <div>
+                    <p>Available</p>
+                    <h2>{summary.available}</h2>
+                  </div>
+                </div>
 
-      <div className="stat-card">
-        <div className="stat-icon orange">🏡</div>
-        <div>
-          <p>Occupied</p>
-          <h2>{summary.occupied}</h2>
-        </div>
-      </div>
+                <div className="stat-card">
+                  <div className="stat-icon orange">
+    <FiLock />
+</div>
+                  <div>
+                    <p>Occupied</p>
+                    <h2>{summary.occupied}</h2>
+                  </div>
+                </div>
 
-      <div className="stat-card">
-        <div className="stat-icon red">🙈</div>
-        <div>
-          <p>Hidden</p>
-          <h2>{summary.hidden}</h2>
-        </div>
-      </div>
+                <div className="stat-card">
+                  <div className="stat-icon red">
+    <FiEyeOff />
+</div>
+                  <div>
+                    <p>Hidden</p>
+                    <h2>{summary.hidden}</h2>
+                  </div>
+                </div>
 
-    </div>
+              </div>
 
-    <div className="dashboard-bottom">
+              <div className="dashboard-bottom">
 
-      <div className="dashboard-card">
-        <h3>Quick Actions</h3>
+              </div>
 
-        <button
-          className="action-btn"
-          onClick={() => (window.location.href = "/add-property")}
-        >
-          ➕ Add Property
-        </button>
+            </div>
+        
+            <div className="dashboard-card">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                }}
+              >
+                <h3>Recent Properties</h3>
 
-        <button
-          className="action-btn"
-          onClick={() => (window.location.href = "/my-properties")}
-        >
-          🏡 My Properties
-        </button>
+                <button
+                  className="action-btn"
+                  style={{
+                    width: "auto",
+                    padding: "8px 18px",
+                  }}
+                  onClick={() => (window.location.href = "/my-properties")}
+                >
+                  View All
+                </button>
+              </div>
 
-        <button
-          className="action-btn"
-          onClick={() => (window.location.href = "/tenant-requests")}
-        >
-          📨 Tenant Requests
-        </button>
-      </div>
+              {properties && properties.length > 0 ? (
+                properties.slice(0, 3).map((property) => (
+                  <div
+                    key={property._id}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "15px 0",
+                      borderBottom: "1px solid #eef2ff",
+                    }}
+                  >
+                    <div>
+                      <strong>{property.title}</strong>
 
-      <div className="dashboard-card">
-        <h3>Overview</h3>
+                      <div
+                        style={{
+                          color: "#64748b",
+                          fontSize: "14px",
+                          marginTop: "4px",
+                        }}
+                      >
+                        {property.city}
+                      </div>
+                    </div>
 
-        <div className="overview-row">
-          <span>Available</span>
-          <strong>{summary.available}</strong>
-        </div>
+                    <div style={{ textAlign: "right" }}>
+                      <strong>₹{property.rent}</strong>
 
-        <div className="overview-row">
-          <span>Occupied</span>
-          <strong>{summary.occupied}</strong>
-        </div>
-
-        <div className="overview-row">
-          <span>Hidden</span>
-          <strong>{summary.hidden}</strong>
-        </div>
-
-        <div className="overview-row">
-          <span>Total</span>
-          <strong>{summary.total}</strong>
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-)}
+                      <div
+                        style={{
+                          color:
+                            property.rentalStatus === "Available"
+                              ? "#16a34a"
+                              : "#f59e0b",
+                          fontSize: "13px",
+                        }}
+                      >
+                        {property.rentalStatus}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No properties found.</p>
+              )}
+            </div>
+          </>
+        )}
+        
 
         {/* ADD PROPERTY */}
 {path === '/add-property' && (
@@ -1030,9 +1074,52 @@ const hiddenProperties = properties.filter(
       </div>
     )}
 
+    <div className="filter-bar">
+
+  <button
+    className={filter === "all" ? "filter-btn active" : "filter-btn"}
+    onClick={() => setFilter("all")}
+  >
+    All
+  </button>
+
+  <button
+    className={filter === "available" ? "filter-btn active" : "filter-btn"}
+    onClick={() => setFilter("available")}
+  >
+    Available
+  </button>
+
+  <button
+    className={filter === "occupied" ? "filter-btn active" : "filter-btn"}
+    onClick={() => setFilter("occupied")}
+  >
+    Occupied
+  </button>
+
+  <button
+    className={filter === "hidden" ? "filter-btn active" : "filter-btn"}
+    onClick={() => setFilter("hidden")}
+  >
+    Hidden
+  </button>
+
+</div>
+
     <div className="property-grid">
       {properties
-        .filter(p => !p.isHidden)
+  .filter((p) => {
+    if (filter === "available")
+      return p.rentalStatus === "available";
+
+    if (filter === "occupied")
+      return p.rentalStatus === "occupied" || p.rentalStatus === "rented";
+
+    if (filter === "hidden")
+      return p.isHidden;
+
+    return true;
+  })
         .map((p) => (
           <div key={p._id} className="property-card">
             <div className="property-header">
@@ -1102,69 +1189,7 @@ const hiddenProperties = properties.filter(
     </div>
   </>
 )}
-{path === "/hidden-properties" && (
-  <div>
-    <h2>Hidden Properties</h2>
-    <div className="property-grid">
-      {properties.filter(p => p.isHidden).length > 0 ? (
-        properties
-          .filter(p => p.isHidden)
-          .map((p) => (
-            <div key={p._id} className="property-card">
-              <div className="property-header">
 
-    <div>
-
-        <h3>{p.title}</h3>
-
-        <p className="property-city">📍 {p.city}</p>
-
-    </div>
-
-    <span className={`status ${p.rentalStatus}`}>
-        {p.rentalStatus}
-    </span>
-
-</div>
-
-<div className="property-info">
-
-    <div>
-
-        <small>Monthly Rent</small>
-
-        <h2>₹{p.rent}</h2>
-
-    </div>
-
-</div>
-
-<button
-className="restore-btn"
-onClick={()=>handleUnhideProperty(p._id)}
->
-
-👁 Restore Property
-
-</button>
-            </div>
-          ))
-      ) : (
-        <div className="empty-state">
-
-    <div className="empty-icon">📦</div>
-
-    <h2>No Hidden Properties</h2>
-
-    <p>
-        Hidden properties will appear here once you hide them.
-    </p>
-
-</div>
-      )}
-    </div>
-  </div>
-)}
 {path === "/tenant-requests" && (
   <div>
     {dealMessage && (
@@ -1247,21 +1272,45 @@ className="cancel-btn"
 onClick={()=>handleFinalize(r._id,"fail")}
 >
       Deal Cancelled
-    </button>
-  </div>
-)}
-        
-        </div>
-      ))}
+</button>
+    </div>
+
+)}      {/* closes accepted condition*/}
+
+</div>   // closes request-card
+
+))}      {/* closes requests.map*/}
+
+</div>  { /* closes request-grid*/}
+
+</div>   // closes tenant wrapper
+
+)}       {/* closes path condition*/}
+
+</main>
     </div>
   </div>
-)}
-</main>
-</div>
   );
 }
 const styles = {
-  container: { minHeight: '100vh' },
+  pageWrapper: { 
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  layoutContainer: {
+    display: 'flex',
+    flex: 1,
+    overflow: 'hidden'
+  },
+  mainContent: {
+  flex: 1,
+  overflowY: "auto",
+  minHeight: "100vh",
+  width: "100%",
+  padding: "30px",
+  background: "#f8fafc"
+},
   navBtn: {
     width: '100%',
     padding: '10px',

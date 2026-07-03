@@ -370,52 +370,105 @@ const matchesLocation =
                     const description = property.description || 'A modern rental with great amenities.';
                     const status = property.status || 'Available';
                     return (
-                      <article key={property._id || property.id || title} className="property-card">
-                        <div className="property-card__media">{status}</div>
-                        <div className="property-card__body">
-                          <h5>{title}</h5>
-                          <p className="text-muted mb-2">{address}</p>
-                          <p className="text-muted mb-3">{description.slice(0, 110)}</p>
-                          <div className="property-card__meta">
-                            <span>{typeof rent === 'number' ? `₹${rent}/mo` : rent}</span>
-                            <span className="property-badge">{status}</span>
-                          </div>
-                        </div>
-                        <div className="property-card__footer d-flex gap-2 flex-wrap">
-                        <Link
-                          className="btn btn-outline-primary btn-sm flex-grow-1"
-                          to={`/properties/${property._id || property.id}`}
-                        >
-                          View Details
-                        </Link>
+<article
+  key={property._id || property.id || title}
+  className="property-card"
+>
+  <div className="property-card__media">
+    {property.image ? (
+      <img
+        src={property.image}
+        alt={title}
+        className="img-fluid"
+      />
+    ) : (
+      <div>
+        {title.split(" ").slice(0, 2).join(" ")}
+      </div>
+    )}
+  </div>
 
-                        <button
-                            type="button"
-                            className="btn btn-outline-success btn-sm flex-grow-1"
-                            disabled={savedProperties.some(
-                              (id) => String(id) === String(property._id || property.id)
-                            )}
-                            onClick={() =>
-                              handleSaveProperty(property._id || property.id)
-                            }
-                          >
-                            {savedProperties.some(
-                              (id) => String(id) === String(property._id || property.id)
-                            )
-                              ? "Saved ✓"
-                              : "Save Property"}
-                          </button>
+  <div className="property-card__body">
+    <div className="d-flex justify-content-between align-items-start gap-2">
+      <div>
+        <h5 className="mb-2">{title}</h5>
 
-                        <button
-                          type="button"
-                          className="btn btn-gradient btn-sm flex-grow-1"
-                          onClick={() => handleSendRequest(property)}
-                        >
-                          Request Property
-                        </button>
-                      </div>
-                         
-                      </article>
+        <p className="text-muted mb-2 property-address">
+    {address}
+</p>
+      </div>
+
+      <span className="property-badge">
+        {status}
+      </span>
+    </div>
+
+    <p className="text-muted mb-3 property-description">
+    {description.slice(0,110)}
+</p>
+    <div className="mt-auto">
+    <div className="property-card__meta">
+      <span>{property.bedrooms ?? "-"} Beds</span>
+
+      <span>{property.bathrooms ?? "-"} Baths</span>
+
+      <span>
+        {property.area
+          ? `${property.area} sqft`
+          : "— sqft"}
+      </span>
+    </div>
+    </div>
+  </div>
+
+  <div className="property-card__footer">
+    <div className="d-flex justify-content-between align-items-center mb-3">
+  <strong>
+    {typeof rent === "number"
+      ? `₹${rent}/mo`
+      : rent}
+  </strong>
+</div>
+
+    <div className="d-flex gap-2">
+      <Link
+        className="btn btn-outline-primary btn-sm flex-fill"
+        to={`/properties/${property._id || property.id}`}
+      >
+        View
+      </Link>
+
+      <button
+        type="button"
+        className="btn btn-outline-success btn-sm flex-fill"
+        disabled={savedProperties.some(
+          (id) =>
+            String(id) ===
+            String(property._id || property.id)
+        )}
+        onClick={() =>
+          handleSaveProperty(property._id || property.id)
+        }
+      >
+        {savedProperties.some(
+          (id) =>
+            String(id) ===
+            String(property._id || property.id)
+        )
+          ? "Saved ✓"
+          : "Save"}
+      </button>
+    </div>
+
+    <button
+      type="button"
+      className="btn btn-gradient w-100 mt-3"
+      onClick={() => handleSendRequest(property)}
+    >
+      Request Property
+    </button>
+  </div>
+</article>
                     );
                   })
                 ) : (

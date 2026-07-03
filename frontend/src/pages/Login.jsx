@@ -64,14 +64,20 @@ function Login() {
     <div className="auth-page">
       <div className="auth-panel">
         <div className="row justify-content-center">
-          <div className="col-sm-10 col-md-6">
+          <div className="col-sm-11 col-md-8 col-lg-6">
             <div className="card auth-card">
               <div className="card-body">
                 <div className="mb-4">
-                  <h3 className="mb-1">LeaseFlow</h3>
+                  <h2 className="fw-bold mb-2">
+    Welcome Back 👋
+</h2>
+
+<h5 className="text-primary fw-bold">
+    LeaseFlow
+</h5>
                   <p className="text-muted mb-0">
-                    Sign in to manage leases, properties, and rental requests.
-                  </p>
+Sign in to continue managing your properties and rental requests.
+</p>
                 </div>
 
                 {error && (
@@ -119,7 +125,7 @@ function Login() {
 
                       <button
                         type="button"
-                        className="btn btn-outline-secondary"
+                        className="btn btn-light border"
                         onClick={() =>
                           setShowPassword(
                             !showPassword

@@ -1,7 +1,6 @@
 .dashboard-page{
-    max-width:1400px;
-    margin:auto;
-    padding:30px;
+    width:100%;
+    padding:0;
 }
 
 .dashboard-hero{
@@ -47,6 +46,7 @@
     grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
     gap:22px;
     margin-bottom:30px;
+    width:100%;
 }
 
 .stat-card{
@@ -66,19 +66,36 @@
 }
 
 .stat-icon{
-    width:65px;
-    height:65px;
-    border-radius:18px;
+    width:58px;
+    height:58px;
+    border-radius:16px;
     display:flex;
-    justify-content:center;
     align-items:center;
-    font-size:28px;
+    justify-content:center;
+    font-size:24px;
 }
 
-.blue{background:#dbeafe;}
-.green{background:#dcfce7;}
-.orange{background:#fef3c7;}
-.red{background:#fee2e2;}
+.stat-icon svg{
+    width:24px;
+    height:24px;
+}
+
+.blue{
+background:#DBEAFE;
+color:#2563EB;
+}
+.green{
+background:#DCFCE7;
+color:#16A34A;
+}
+.orange{
+background:#FEF3C7;
+color:#D97706;
+}
+.red{
+background:#FEE2E2;
+color:#DC2626;
+}
 
 .stat-card p{
     margin:0;
@@ -97,6 +114,7 @@
 }
 
 .dashboard-card{
+    width:100%;
     background:white;
     border-radius:18px;
     padding:25px;
@@ -135,6 +153,7 @@
 flex-direction:column;
 align-items:flex-start;
 gap:20px;
+width:100%;
 }
 
 .dashboard-bottom{
@@ -368,4 +387,84 @@ border-radius:10px;
 background:#f59e0b;
 color:white;
 cursor:pointer;
+}
+
+.filter-bar{
+    display:flex;
+    gap:12px;
+    margin:20px 0 30px;
+    flex-wrap:wrap;
+}
+
+.filter-btn{
+    padding:10px 22px;
+    border:1px solid #dbeafe;
+    border-radius:30px;
+    background:white;
+    color:#475569;
+    font-weight:600;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.filter-btn:hover{
+    background:#eff6ff;
+    color:#2563eb;
+}
+
+.filter-btn.active{
+    background:#2563eb;
+    color:white;
+    border-color:#2563eb;
+}
+
+/* Responsive Sidebar + Main Layout */
+@media (max-width: 768px) {
+  .owner-sidebar {
+    width: 240px;
+  }
+}
+
+@media (max-width: 576px) {
+  .owner-sidebar {
+    width: 200px;
+  }
+
+  .dashboard-page {
+    padding: 16px;
+  }
+
+  .dashboard-hero {
+    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-hero h1 {
+    font-size: 20px;
+  }
+
+  .dashboard-hero p {
+    font-size: 14px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+  }
+
+  .stat-card {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .stat-icon {
+    width: 45px;
+    height: 45px;
+  }
+
+  .primary-btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
 }
