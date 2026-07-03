@@ -2,6 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLocation } from "react-router-dom";
+import OwnerSidebar from '../components/OwnerSidebar';
+import "./OwnerDashboard.css";
+
+import {
+  FiHome,
+  FiCheckCircle,
+  FiLock,
+  FiEyeOff
+} from "react-icons/fi";
 
 const propertyTypes = ['Apartment', 'House', 'Villa', 'Office', 'Shop'];
 const initialForm = {
@@ -36,6 +45,7 @@ const [notification, setNotification] = useState("");
 const [notificationType, setNotificationType] = useState("success");
 const [deleteMessage, setDeleteMessage] = useState("");
 const [isEditMode, setIsEditMode] = useState(false);
+const [filter, setFilter] = useState("all");
 const [files, setFiles] = useState({
   images: [],
   ownershipDoc: null,
@@ -310,6 +320,9 @@ console.log("FINALIZE RESPONSE:", res.data);
 
     if (decision === "success") {
       showNotification("🎉 Deal completed successfully!");
+      setDealMessage(
+  "Deal completed successfully. Property has been marked as hidden."
+);
     } else {
       showNotification("Deal cancelled!");
     }
@@ -359,7 +372,11 @@ const hiddenProperties = properties.filter(
 );
 
   return (
-    <div style={styles.container}>
+    <div style={styles.pageWrapper}>
+      {/* Sidebar and Main Content in Flex Layout */}
+      <div style={styles.layoutContainer}>
+        <OwnerSidebar />
+
 
       {/* MAIN */}
       <main style={styles.main}>
@@ -383,84 +400,166 @@ const hiddenProperties = properties.filter(
     {notification}
   </div>
 )}
+        {/* MAIN */}
+        <main style={styles.mainContent}>
 
-        {path === '/owner-dashboard' && (
-  <>
-    <h2 style={{ marginBottom: "20px" }}>Owner Dashboard</h2>
+        {path === "/owner-dashboard" && (
+          <>
+            <div className="dashboard-page">
 
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        gap: "20px",
-        marginBottom: "25px",
-      }}
-    >
-      <div
-        style={{
-          background: "#ffffff",
-          padding: "20px",
-          borderRadius: "12px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-        }}
-      >
-        <h4 style={{ color:'#1f2937', fontWeight: 'normal' }}>
-  Total Properties
-</h4>
-        <h2 style={{ color: '#1f2937' }}>
-  {summary.total}
-</h2>
-      </div>
+              <div className="dashboard-hero">
+                <div>
+                  <h1>Welcome Back, {user?.name || "Jyo"} </h1>
+                  <p>
+                    Manage your rental properties efficiently and track everything from
+                    one place.
+                  </p>
+                </div>
 
-      <div
-        style={{
-          background: "#ffffff",
-          padding: "20px",
-          borderRadius: "12px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-        }}
-      >
-        <h4 style={{ color:'#1f2937', fontWeight: 'normal' }}>
-  Available Properties
-</h4>
-        <h2>{summary.available}</h2>
-      </div>
+                <button
+                  className="primary-btn"
+                  onClick={() => (window.location.href = "/add-property")}
+                >
+                  + Add Property
+                </button>
+              </div>
 
-      <div
-        style={{
-          background: "#ffffff",
-          padding: "20px",
-          borderRadius: "12px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-        }}
-      >
-        <h4 style={{ color:'#1f2937', fontWeight: 'normal' }}>
-  Occupied Properties
-</h4>
-        <h2>{summary.occupied}</h2>
-      </div>
+              <div className="stats-grid">
 
-      <div
-        style={{
-          background: "#ffffff",
-          padding: "20px",
-          borderRadius: "12px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-        }}
-      >
-        <h4 style={{ color: '#1f2937', fontWeight: 'normal' }}>
-  Hidden Properties
-</h4>
-        <h2>{summary.hidden}</h2>
-      </div>
-    </div>
-  </>
-)}
+                <div className="stat-card">
+                  <div className="stat-icon blue">
+    <FiHome />
+</div>
+                  <div>
+                    <p>Total Properties</p>
+                    <h2>{summary.total}</h2>
+                  </div>
+                </div>
+
+                <div className="stat-card">
+                  <div className="stat-icon green">
+    <FiCheckCircle />
+</div>
+                  <div>
+                    <p>Available</p>
+                    <h2>{summary.available}</h2>
+                  </div>
+                </div>
+
+                <div className="stat-card">
+                  <div className="stat-icon orange">
+    <FiLock />
+</div>
+                  <div>
+                    <p>Occupied</p>
+                    <h2>{summary.occupied}</h2>
+                  </div>
+                </div>
+
+                <div className="stat-card">
+                  <div className="stat-icon red">
+    <FiEyeOff />
+</div>
+                  <div>
+                    <p>Hidden</p>
+                    <h2>{summary.hidden}</h2>
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="dashboard-bottom">
+
+              </div>
+
+            </div>
+        
+            <div className="dashboard-card">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                }}
+              >
+                <h3>Recent Properties</h3>
+
+                <button
+                  className="action-btn"
+                  style={{
+                    width: "auto",
+                    padding: "8px 18px",
+                  }}
+                  onClick={() => (window.location.href = "/my-properties")}
+                >
+                  View All
+                </button>
+              </div>
+
+              {properties && properties.length > 0 ? (
+                properties.slice(0, 3).map((property) => (
+                  <div
+                    key={property._id}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "15px 0",
+                      borderBottom: "1px solid #eef2ff",
+                    }}
+                  >
+                    <div>
+                      <strong>{property.title}</strong>
+
+                      <div
+                        style={{
+                          color: "#64748b",
+                          fontSize: "14px",
+                          marginTop: "4px",
+                        }}
+                      >
+                        {property.city}
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: "right" }}>
+                      <strong>₹{property.rent}</strong>
+
+                      <div
+                        style={{
+                          color:
+                            property.rentalStatus === "Available"
+                              ? "#16a34a"
+                              : "#f59e0b",
+                          fontSize: "13px",
+                        }}
+                      >
+                        {property.rentalStatus}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No properties found.</p>
+              )}
+            </div>
+          </>
+        )}
+        
 
         {/* ADD PROPERTY */}
 {path === '/add-property' && (
   <div style={styles.card}>
-    <h2>{selectedProperty ? "Edit Property" : "Add Property"}</h2>
+    <>
+  <h2 style={{fontSize:"34px",marginBottom:"8px"}}>
+    {selectedProperty ? "Edit Property" : "Add Property"}
+  </h2>
+
+  <p style={{color:"#64748b",marginBottom:"30px"}}>
+    Fill in the property details below to list your rental property.
+  </p>
+</>
 
     {successMessage && (
       <div
@@ -493,7 +592,10 @@ const hiddenProperties = properties.filter(
       Title <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       placeholder="Title"
       value={form.title}
       onChange={(e) => handleChange("title", e.target.value)}
@@ -505,7 +607,10 @@ const hiddenProperties = properties.filter(
       Property Type <span style={{ color: "red" }}>*</span>
     </label>
     <select
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       value={form.propertyType}
       onChange={(e) => handleChange("propertyType", e.target.value)}
     >
@@ -522,7 +627,10 @@ const hiddenProperties = properties.filter(
       Address <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       placeholder="Address"
       value={form.address}
       onChange={(e) => handleChange("address", e.target.value)}
@@ -534,7 +642,10 @@ const hiddenProperties = properties.filter(
       City <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       placeholder="City"
       value={form.city}
       onChange={(e) => handleChange("city", e.target.value)}
@@ -548,7 +659,10 @@ const hiddenProperties = properties.filter(
       Rent <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       type="number"
       placeholder="Rent"
       value={form.rent}
@@ -561,7 +675,10 @@ const hiddenProperties = properties.filter(
       Description <span style={{ color: "red" }}>*</span>
     </label>
     <textarea
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       placeholder="Description"
       value={form.description}
       onChange={(e) => handleChange("description", e.target.value)}
@@ -575,7 +692,10 @@ const hiddenProperties = properties.filter(
       Bedrooms <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       type="number"
       placeholder="Bedrooms"
       value={form.bedrooms}
@@ -588,7 +708,10 @@ const hiddenProperties = properties.filter(
       Bathrooms <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       type="number"
       placeholder="Bathrooms"
       value={form.bathrooms}
@@ -603,7 +726,10 @@ const hiddenProperties = properties.filter(
       Latitude <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       type="number"
       placeholder="Latitude"
       value={form.latitude}
@@ -616,7 +742,10 @@ const hiddenProperties = properties.filter(
       Longitude <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       type="number"
       placeholder="Longitude"
       value={form.longitude}
@@ -630,7 +759,10 @@ const hiddenProperties = properties.filter(
       Square Feet <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       type="number"
       placeholder="Square Feet"
       value={form.squareFeet}
@@ -643,7 +775,10 @@ const hiddenProperties = properties.filter(
       Available From <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       type="date"
       value={form.availableFrom}
       onChange={(e) => handleChange("availableFrom", e.target.value)}
@@ -718,7 +853,10 @@ const hiddenProperties = properties.filter(
       Title <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       value={form.title}
       onChange={(e) => handleChange("title", e.target.value)}
     />
@@ -729,7 +867,10 @@ const hiddenProperties = properties.filter(
       Property Type <span style={{ color: "red" }}>*</span>
     </label>
     <select
-      style={styles.input}
+      style={{
+   ...styles.input,
+   boxSizing:"border-box"
+}}
       value={form.propertyType}
       onChange={(e) => handleChange("propertyType", e.target.value)}
     >
@@ -746,7 +887,10 @@ const hiddenProperties = properties.filter(
       Address <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+        ...styles.input,
+        boxSizing: "border-box"
+      }}
       value={form.address}
       onChange={(e) => handleChange("address", e.target.value)}
     />
@@ -757,7 +901,10 @@ const hiddenProperties = properties.filter(
       City <span style={{ color: "red" }}>*</span>
     </label>
     <input
-      style={styles.input}
+      style={{
+        ...styles.input,
+        boxSizing: "border-box"
+      }}
       value={form.city}
       onChange={(e) => handleChange("city", e.target.value)}
     />
@@ -770,7 +917,10 @@ const hiddenProperties = properties.filter(
     </label>
     <input
       type="number"
-      style={styles.input}
+      style={{
+        ...styles.input,
+        boxSizing: "border-box"
+      }}
       value={form.rent}
       onChange={(e) => handleChange("rent", e.target.value)}
     />
@@ -781,7 +931,10 @@ const hiddenProperties = properties.filter(
       Description <span style={{ color: "red" }}>*</span>
     </label>
     <textarea
-      style={styles.input}
+      style={{
+        ...styles.input,
+        boxSizing: "border-box"
+      }}
       value={form.description}
       onChange={(e) => handleChange("description", e.target.value)}
     />
@@ -794,7 +947,10 @@ const hiddenProperties = properties.filter(
     </label>
     <input
       type="number"
-      style={styles.input}
+      style={{
+        ...styles.input,
+        boxSizing: "border-box"
+      }}
       value={form.bedrooms}
       onChange={(e) => handleChange("bedrooms", e.target.value)}
     />
@@ -806,7 +962,10 @@ const hiddenProperties = properties.filter(
     </label>
     <input
       type="number"
-      style={styles.input}
+      style={{
+        ...styles.input,
+        boxSizing: "border-box"
+      }}
       value={form.bathrooms}
       onChange={(e) => handleChange("bathrooms", e.target.value)}
     />
@@ -819,7 +978,10 @@ const hiddenProperties = properties.filter(
     </label>
     <input
       type="number"
-      style={styles.input}
+      style={{
+        ...styles.input,
+        boxSizing: "border-box"
+      }}
       value={form.latitude}
       onChange={(e) => handleChange("latitude", e.target.value)}
     />
@@ -831,7 +993,10 @@ const hiddenProperties = properties.filter(
     </label>
     <input
       type="number"
-      style={styles.input}
+      style={{
+        ...styles.input,
+        boxSizing: "border-box"
+      }}
       value={form.longitude}
       onChange={(e) => handleChange("longitude", e.target.value)}
     />
@@ -844,7 +1009,10 @@ const hiddenProperties = properties.filter(
     </label>
     <input
       type="number"
-      style={styles.input}
+      style={{
+        ...styles.input,
+        boxSizing: "border-box"
+      }}
       value={form.squareFeet}
       onChange={(e) => handleChange("squareFeet", e.target.value)}
     />
@@ -856,7 +1024,10 @@ const hiddenProperties = properties.filter(
     </label>
     <input
       type="date"
-      style={styles.input}
+      style={{
+        ...styles.input,
+        boxSizing: "border-box"
+      }}
       value={form.availableFrom}
       onChange={(e) => handleChange("availableFrom", e.target.value)}
     />
@@ -914,48 +1085,113 @@ const hiddenProperties = properties.filter(
       </div>
     )}
 
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-      gap: "20px",
-    }}>
+    <div className="filter-bar">
+
+  <button
+    className={filter === "all" ? "filter-btn active" : "filter-btn"}
+    onClick={() => setFilter("all")}
+  >
+    All
+  </button>
+
+  <button
+    className={filter === "available" ? "filter-btn active" : "filter-btn"}
+    onClick={() => setFilter("available")}
+  >
+    Available
+  </button>
+
+  <button
+    className={filter === "occupied" ? "filter-btn active" : "filter-btn"}
+    onClick={() => setFilter("occupied")}
+  >
+    Occupied
+  </button>
+
+  <button
+    className={filter === "hidden" ? "filter-btn active" : "filter-btn"}
+    onClick={() => setFilter("hidden")}
+  >
+    Hidden
+  </button>
+
+</div>
+
+    <div className="property-grid">
       {properties
-        .filter(p => !p.isHidden)
+  .filter((p) => {
+    if (filter === "available")
+      return p.rentalStatus === "available";
+
+    if (filter === "occupied")
+      return p.rentalStatus === "occupied" || p.rentalStatus === "rented";
+
+    if (filter === "hidden")
+      return p.isHidden;
+
+    return true;
+  })
         .map((p) => (
-          <div key={p._id} style={styles.card}>
-            <h3>{p.title}</h3>
+          <div key={p._id} className="property-card">
+            <div className="property-header">
+              <div>
+                <h3>{p.title}</h3>
+                <p className="property-city">📍 {p.city}</p>
+              </div>
 
-            <p><b>City:</b> {p.city}</p>
-            <p><b>Rent:</b> ₹{p.rent}</p>
-            <p><b>Status:</b> {p.rentalStatus}</p>
+              <span className={`status ${p.rentalStatus}`}>
+                {p.rentalStatus}
+              </span>
+            </div>
 
-            <div style={{ display: "flex", gap: "10px" }}>
+            <div className="property-info">
+              <div>
+                <small>Monthly Rent</small>
+                <h2>₹{p.rent}</h2>
+              </div>
+
+              <div>
+                <small>Bedrooms</small>
+                <h4>{p.bedrooms}</h4>
+              </div>
+
+              <div>
+                <small>Bathrooms</small>
+                <h4>{p.bathrooms}</h4>
+              </div>
+            </div>
+
+            <div className="property-actions">
               <button
                 onClick={() => {
                   setSelectedProperty(p);
                   setIsEditMode(true);
                   setForm({
-  title: p.title || "",
-  propertyType: p.propertyType || "Apartment",
-  address: p.address || "",
-  city: p.city || "",
-  rent: p.rent || "",
-  description: p.description || "",
-  latitude: p.latitude || "",
-  longitude: p.longitude || "",
-  bedrooms: p.bedrooms || "",
-  bathrooms: p.bathrooms || "",
-  squareFeet: p.squareFeet || "",
-  availableFrom: p.availableFrom
-    ? p.availableFrom.split("T")[0]
-    : "",
-});
+                    title: p.title || "",
+                    propertyType: p.propertyType || "Apartment",
+                    address: p.address || "",
+                    city: p.city || "",
+                    rent: p.rent || "",
+                    description: p.description || "",
+                    latitude: p.latitude || "",
+                    longitude: p.longitude || "",
+                    bedrooms: p.bedrooms || "",
+                    bathrooms: p.bathrooms || "",
+                    squareFeet: p.squareFeet || "",
+                    availableFrom: p.availableFrom
+                      ? p.availableFrom.split("T")[0]
+                      : "",
+                  });
                 }}
+                className="edit-btn"
               >
                 Edit
               </button>
 
-              <button onClick={() => handleDelete(p._id)}>
+              <button
+                onClick={() => handleDelete(p._id)}
+                className="delete-btn"
+              >
                 Delete
               </button>
             </div>
@@ -964,98 +1200,100 @@ const hiddenProperties = properties.filter(
     </div>
   </>
 )}
-{path === "/hidden-properties" && (
-  <div>
-    <h2>Hidden Properties</h2>
 
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-      gap: "20px",
-      marginTop: "20px"
-    }}>
-      {properties.filter(p => p.isHidden).length > 0 ? (
-        properties
-          .filter(p => p.isHidden)
-          .map((p) => (
-            <div key={p._id} style={styles.card}>
-              <h3>{p.title}</h3>
-
-              <p><b>City:</b> {p.city}</p>
-              <p><b>Rent:</b> ₹{p.rent}</p>
-              <p><b>Status:</b> {p.rentalStatus}</p>
-
-              <button onClick={() => handleUnhideProperty(p._id)}>
-                Unhide Property
-              </button>
-            </div>
-          ))
-      ) : (
-        <p style={{ textAlign: "center", width: "100%" }}>
-          No hidden properties
-        </p>
-      )}
-    </div>
-  </div>
-)}
 {path === "/tenant-requests" && (
   <div>
     
 
     <h2>Tenant Requests</h2>
 
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-      gap: "20px"
-    }}>
+    <div className="request-grid">
       {requests.map((r) => (
-        <div key={r._id} style={styles.card}>
-          <p><b>Tenant:</b> {r.tenant?.name}</p>
-          <p><b>Property:</b> {r.property?.title}</p>
-          <p><b>Status:</b> {r.status}</p>
+        <div key={r._id} className="request-card">
+          <div className="request-header">
+
+<div>
+
+<h3>{r.property?.title}</h3>
+
+<p className="request-user">
+👤 {r.tenant?.name}
+</p>
+
+</div>
+
+<span className={`status ${r.status}`}>
+{r.status}
+</span>
+
+</div>
 
           {r.status === "pending" && !r.ownerAccepted && (
-  <>
-    <button onClick={() => handleAccept(r._id)}>
+  <div className="request-actions">
+    <button
+      className="accept-btn"
+      onClick={() => handleAccept(r._id)}
+    >
       Accept
     </button>
 
-    <button onClick={() => handleReject(r._id)}>
+    <button
+      className="reject-btn"
+      onClick={() => handleReject(r._id)}
+    >
       Reject
     </button>
-  </>
+  </div>
 )}
 
-          {r.ownerAccepted && (
-  <div>
+{r.ownerAccepted && (
+  <div className="request-actions">
     <button
-      style={styles.btn}
+      className="deal-btn"
       onClick={() => handleFinalize(r._id, "success")}
     >
       Deal Successful
     </button>
 
     <button
-      style={styles.deleteBtn}
+      className="cancel-btn"
       onClick={() => handleFinalize(r._id, "fail")}
     >
       Deal Cancelled
     </button>
   </div>
 )}
-        
-        </div>
+
+        </div> {/* request-card */}
       ))}
-    </div>
+    </div> {/* request-grid */}
   </div>
 )}
-</main>
-</div>
-  );
+
+      </main>
+    </div>
+  </div>
+);
 }
 const styles = {
-  container: { minHeight: '100vh' },
+  pageWrapper: { 
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  layoutContainer: {
+    display: 'flex',
+    flex: 1,
+    overflow: 'hidden'
+  },
+  mainContent: {
+  flex: 1,
+  overflowY: "auto",
+  minHeight: "100vh",
+  width: "100%",
+  padding: "30px",
+  background: "#f8fafc"
+},
   navBtn: {
     width: '100%',
     padding: '10px',
@@ -1065,20 +1303,60 @@ const styles = {
     textAlign: 'left'
   },
   main: { flex: 1, padding: '20px' },
-  card: { background: '#f3f4f6', padding: '15px', marginBottom: '10px', borderRadius: '8px' },
+ card: {
+  background: "#fff",
+  borderRadius: "20px",
+  padding: "35px",
+  boxShadow: "0 12px 35px rgba(37,99,235,.10)",
+  maxWidth: "1100px",
+  margin: "30px auto",
+  border: "1px solid #eef2ff"
+},
   form: { display: 'flex', flexDirection: 'column', gap: '10px' },
-  row: { display: 'flex', gap: '10px' },
+row: {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "24px",
+  marginBottom: "22px",
+},
 
   fieldGroup: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '5px'
-  },
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+},
 
-  input: { flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ccc' },
-  fileBox: { flex: 1, display: 'flex', flexDirection: 'column', gap: '5px' },
-  btn: { background: '#4f46e5', color: 'white', padding: '10px', border: 'none' }
+input: {
+  padding: "14px 16px",
+  border: "1px solid #dbe4ff",
+  borderRadius: "12px",
+  outline: "none",
+  fontSize: "15px",
+  transition: "0.3s",
+  background: "#fafcff"
+},
+  fileBox: {
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+  padding: "18px",
+  border: "2px dashed #bfdbfe",
+  borderRadius: "14px",
+  background: "#f8fbff"
+},
+  btn: {
+  width: "100%",
+  padding: "16px",
+  border: "none",
+  borderRadius: "14px",
+  background: "linear-gradient(135deg,#2563eb,#3b82f6)",
+  color: "#fff",
+  fontSize: "17px",
+  fontWeight: "600",
+  cursor: "pointer",
+  marginTop: "20px",
+  boxShadow: "0 10px 25px rgba(37,99,235,.25)"
+},
 };
 
 export default OwnerDashboard;

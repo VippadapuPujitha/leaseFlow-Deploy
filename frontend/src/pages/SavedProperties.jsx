@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axiosConfig";
+import "./SavedProperties.css";
 
 function SavedProperties() {
   const [properties, setProperties] = useState([]);
@@ -70,9 +71,22 @@ const removeProperty = async (propertyId) => {
       )}
 
       {properties.length === 0 ? (
-        <div className="alert alert-warning">
-          No saved properties found.
-        </div>
+        <div className="empty-state">
+    <div className="empty-icon">❤️</div>
+
+    <h2>No Saved Properties</h2>
+
+    <p>
+        Save your favourite properties and they'll appear here for quick access.
+    </p>
+
+    <Link
+        to="/properties"
+        className="browse-btn"
+    >
+        Browse Properties
+    </Link>
+</div>
       ) : (
         <div className="row">
           {properties.map((property) => (
@@ -82,34 +96,38 @@ const removeProperty = async (propertyId) => {
             >
               <div className="card h-100 shadow-sm">
                 <div className="card-body">
-                  <h5 className="card-title">
-                    {property.title}
-                  </h5>
+                  <h4 className="property-title">
+    {property.title}
+</h4>
 
-                  <p className="text-muted">
-                    {property.address}
-                  </p>
+<p className="property-location">
+    📍 {property.address}
+</p>
 
-                  <p>
-                    <strong>Rent:</strong>{" "}
-                    ₹{property.rent}
-                  </p>
+<div className="property-details">
 
-                  <p>
-                    <strong>Type:</strong>{" "}
-                    {property.propertyType}
-                  </p>
+    <div>
+        <small>Monthly Rent</small>
+        <h3>₹{property.rent}</h3>
+    </div>
+
+    <div>
+        <small>Type</small>
+        <h5>{property.propertyType}</h5>
+    </div>
+
+</div>
 
                   <div className="d-flex gap-2">
                     <Link
                       to={`/properties/${property._id}`}
-                      className="btn btn-primary btn-sm"
+                      className="view-btn"
                     >
                       View
                     </Link>
 
                     <button
-                      className="btn btn-danger btn-sm"
+                      className="remove-btn"
                       onClick={() =>
                         removeProperty(
                           property._id

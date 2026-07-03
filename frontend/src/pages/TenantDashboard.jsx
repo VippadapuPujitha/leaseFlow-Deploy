@@ -291,20 +291,21 @@ const matchesLocation =
       </aside>
 
       <main className="dashboard-main">
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
-          <div>
-            <h1 className="page-title mb-2">Tenant Marketplace</h1>
-            <p className="page-subtitle">Browse rentals, manage your requests, and track active leases.</p>
-          </div>
-          <div className="text-end">
-            <span className="badge bg-primary-soft text-primary py-2 px-3">{summary.totalProperties} listings</span>
-          </div>
-        </div>
+        
 
         {error && <div className="alert alert-danger">{error}</div>}
 
         {activeSection === 'dashboard' && (
           <>
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+          <div>
+            <h1 className="page-title display-5 fw-bold mb-2">Tenant Marketplace</h1>
+            <p className="page-subtitle fs-5">Browse rentals, manage your requests, and track active leases.</p>
+          </div>
+          <div className="text-end">
+            <span className="badge bg-primary-soft text-primary py-2 px-3">{summary.totalProperties} listings</span>
+          </div>
+        </div>
             <div className="stat-grid mb-4">
               <div className="stat-card">
                 <div className="stat-card__title">Total properties</div>
@@ -336,192 +337,227 @@ const matchesLocation =
         )}
 
         {activeSection === 'browse' && (
-          <>
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
-              <div>
-                <h2 className="mb-2">Browse Properties</h2>
-                <p className="text-muted">Modern rental listings with filters and quick request actions.</p>
-              </div>
-            </div>
-            {requestMessage && (
-  <div
-    style={{
-      position: "fixed",
-      top: "20px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      background: "#4CAF50",
-      color: "white",
-      padding: "12px 25px",
-      borderRadius: "8px",
-      fontWeight: "600",
-      zIndex: 9999,
-      boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-    }}
-  >
-    {requestMessage}
-  </div>
-)}
-            <div className="card card-glass mb-4 p-4">
-              <div className="row gy-3">
-                <div className="col-md-4">
-                  <label className="form-label">Location</label>
-                  <input className="form-control" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City or neighborhood" />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Property Type</label>
-                  <select
-  className="form-select"
-  value={propertyType}
-  onChange={(e) => setPropertyType(e.target.value)}
->
-  <option value="">All Types</option>
-  <option value="Apartment">Apartment</option>
-  <option value="House">House</option>
-  <option value="Villa">Villa</option>
-  <option value="Office">Office</option>
-  <option value="Shop">Shop</option>
-</select>
-                </div>
-                <div className="col-md-2">
-                  <label className="form-label">Rent min</label>
-                  <input className="form-control" type="number" value={rentMin} onChange={(e) => setRentMin(e.target.value)} placeholder="0" />
-                </div>
-                <div className="col-md-2">
-                  <label className="form-label">Rent max</label>
-                  <input className="form-control" type="number" value={rentMax} onChange={(e) => setRentMax(e.target.value)} placeholder="Any" />
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Search</label>
-                  <input className="form-control" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by Property Name" />
-                </div>
-              </div>
-            </div>
-
-            {loading ? (
-  <div className="alert alert-info">
-    Loading marketplace...
-  </div>
-) : (
   <>
-
-    <div className="property-grid">
-      {filteredProperties.length ? (
-        filteredProperties.map((property) => {
-          console.log(
-            "Rendering:",
-            property.title,
-            property.status,
-            property.isHidden,
-            property.rentalStatus
-          );
-
-          const title =
-            property.title || property.name || "Property";
-
-          const address =
-            `${property.address || property.location || ""}${
-              property.city ? `, ${property.city}` : ""
-            }` || "Location not available";
-
-          const rent =
-            property.rent || property.monthlyRent || "N/A";
-
-          const description =
-            property.description ||
-            "A modern rental with great amenities.";
-
-          const status =
-            property.status || "Available";
-
-          return (
-            <article
-              key={property._id || property.id || title}
-              className="property-card"
-            >
-              <div className="property-card__media">
-                {status}
-              </div>
-
-              <div className="property-card__body">
-                <h5>{title}</h5>
-
-                <p className="text-muted mb-2">
-                  {address}
-                </p>
-
-                <p className="text-muted mb-3">
-                  {description.slice(0, 110)}
-                </p>
-
-                <div className="property-card__meta">
-                  <span>
-                    {typeof rent === "number"
-                      ? `₹${rent}/mo`
-                      : rent}
-                  </span>
-
-                  <span className="property-badge">
-                    {status}
-                  </span>
-                </div>
-              </div>
-
-              <div className="property-card__footer d-flex gap-2 flex-wrap">
-                <Link
-                  className="btn btn-outline-primary btn-sm flex-grow-1"
-                  to={`/properties/${property._id || property.id}`}
-                >
-                  View Details
-                </Link>
-
-                <button
-                  type="button"
-                  className="btn btn-outline-success btn-sm flex-grow-1"
-                  disabled={savedProperties.some(
-                    (id) =>
-                      String(id) ===
-                      String(property._id || property.id)
-                  )}
-                  onClick={() =>
-                    handleSaveProperty(
-                      property._id || property.id
-                    )
-                  }
-                >
-                  {savedProperties.some(
-                    (id) =>
-                      String(id) ===
-                      String(property._id || property.id)
-                  )
-                    ? "Saved ✓"
-                    : "Save Property"}
-                </button>
-
-                <button
-                  type="button"
-                  className="btn btn-gradient btn-sm flex-grow-1"
-                  onClick={() =>
-                    handleSendRequest(property)
-                  }
-                >
-                  Request Property
-                </button>
-              </div>
-            </article>
-          );
-        })
-      ) : (
-        <div className="alert alert-light">
-          No matching properties found. Try broadening your
-          filters.
-        </div>
-      )}
+    <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+      <div>
+        <h2 className="mb-2">Browse Properties</h2>
+        <p className="text-muted">
+          Modern rental listings with filters and quick request actions.
+        </p>
+      </div>
     </div>
+
+    {requestMessage && (
+      <div
+        style={{
+          position: "fixed",
+          top: "20px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "#4CAF50",
+          color: "white",
+          padding: "12px 25px",
+          borderRadius: "8px",
+          fontWeight: "600",
+          zIndex: 9999,
+          boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+        }}
+      >
+        {requestMessage}
+      </div>
+    )}
+
+    <div className="card card-glass mb-4 p-4">
+      <div className="row gy-3">
+        <div className="col-md-4">
+          <label className="form-label">Location</label>
+          <input
+            className="form-control"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="City or neighborhood"
+          />
+        </div>
+
+        <div className="col-md-4">
+          <label className="form-label">Property Type</label>
+          <select
+            className="form-select"
+            value={propertyType}
+            onChange={(e) => setPropertyType(e.target.value)}
+          >
+            <option value="">All Types</option>
+            <option value="Apartment">Apartment</option>
+            <option value="House">House</option>
+            <option value="Villa">Villa</option>
+            <option value="Office">Office</option>
+            <option value="Shop">Shop</option>
+          </select>
+        </div>
+
+        <div className="col-md-2">
+          <label className="form-label">Rent min</label>
+          <input
+            className="form-control"
+            type="number"
+            value={rentMin}
+            onChange={(e) => setRentMin(e.target.value)}
+            placeholder="0"
+          />
+        </div>
+
+        <div className="col-md-2">
+          <label className="form-label">Rent max</label>
+          <input
+            className="form-control"
+            type="number"
+            value={rentMax}
+            onChange={(e) => setRentMax(e.target.value)}
+            placeholder="Any"
+          />
+        </div>
+
+        <div className="col-12">
+          <label className="form-label">Search</label>
+          <input
+            className="form-control"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by Property Name"
+          />
+        </div>
+      </div>
+    </div>
+
+    {loading ? (
+      <div className="alert alert-info">Loading marketplace...</div>
+    ) : (
+      <div className="property-grid">
+        {filteredProperties.length ? (
+          filteredProperties.map((property) => {
+            const title = property.title || property.name || "Property";
+
+            const address =
+              `${property.address || property.location || ""}${
+                property.city ? `, ${property.city}` : ""
+              }` || "Location not available";
+
+            const rent = property.rent || property.monthlyRent || "N/A";
+
+            const description =
+              property.description ||
+              "A modern rental with great amenities.";
+
+            const status = property.status || "Available";
+
+            return (
+              <article
+                key={property._id || property.id || title}
+                className="property-card"
+              >
+                <div className="property-card__media">
+                  {property.image ? (
+                    <img
+                      src={property.image}
+                      alt={title}
+                      className="img-fluid"
+                    />
+                  ) : (
+                    <div>
+                      {title.split(" ").slice(0, 2).join(" ")}
+                    </div>
+                  )}
+                </div>
+
+                <div className="property-card__body">
+                  <div className="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                      <h5 className="mb-2">{title}</h5>
+
+                      <p className="text-muted mb-2 property-address">
+                        {address}
+                      </p>
+                    </div>
+
+                    <span className="property-badge">{status}</span>
+                  </div>
+
+                  <p className="text-muted mb-3 property-description">
+                    {description.slice(0, 110)}
+                  </p>
+
+                  <div className="mt-auto">
+                    <div className="property-card__meta">
+                      <span>{property.bedrooms ?? "-"} Beds</span>
+                      <span>{property.bathrooms ?? "-"} Baths</span>
+                      <span>
+                        {property.area
+                          ? `${property.area} sqft`
+                          : "— sqft"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="property-card__footer">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <strong>
+                      {typeof rent === "number"
+                        ? `₹${rent}/mo`
+                        : rent}
+                    </strong>
+                  </div>
+
+                  <div className="d-flex gap-2">
+                    <Link
+                      className="btn btn-outline-primary btn-sm flex-fill"
+                      to={`/properties/${property._id || property.id}`}
+                    >
+                      View
+                    </Link>
+
+                    <button
+                      type="button"
+                      className="btn btn-outline-success btn-sm flex-fill"
+                      disabled={savedProperties.some(
+                        (id) =>
+                          String(id) ===
+                          String(property._id || property.id)
+                      )}
+                      onClick={() =>
+                        handleSaveProperty(property._id || property.id)
+                      }
+                    >
+                      {savedProperties.some(
+                        (id) =>
+                          String(id) ===
+                          String(property._id || property.id)
+                      )
+                        ? "Saved ✓"
+                        : "Save"}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-gradient w-100 mt-3"
+                    onClick={() => handleSendRequest(property)}
+                  >
+                    Request Property
+                  </button>
+                </div>
+              </article>
+            );
+          })
+        ) : (
+          <div className="alert alert-light">
+            No matching properties found. Try broadening your filters.
+          </div>
+        )}
+      </div>
+    )}
   </>
 )}
-          </>
-        )}
 
         {activeSection === 'saved' && (
           <SavedProperties />

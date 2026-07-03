@@ -29,7 +29,15 @@ function App() {
     <div className="app-shell">
       <Navbar />
 
-      <main className="container py-5">
+<main
+  className={
+    user?.role === "owner" ||
+user?.role === "admin" ||
+user?.role === "tenant"
+      ? "container-fluid p-0"
+      : "container py-5"
+  }
+>
         <Routes>
 
   {/* Default Route */}

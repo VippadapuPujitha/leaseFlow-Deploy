@@ -31,39 +31,9 @@ function Navbar() {
     </>
   );
 
-  const renderOwnerLinks = () => (
-    <>
-      <li className="nav-item">
-        <NavLink className={linkClass} to="/owner-dashboard">
-          Dashboard
-        </NavLink>
-      </li>
-
-      <li className="nav-item">
-        <NavLink className={linkClass} to="/add-property">
-          Add Property
-        </NavLink>
-      </li>
-
-      <li className="nav-item">
-        <NavLink className={linkClass} to="/my-properties">
-          My Properties
-        </NavLink>
-      </li>
-
-      <li className="nav-item">
-        <NavLink className={linkClass} to="/hidden-properties">
-          Hidden Properties
-        </NavLink>
-      </li>
-
-      <li className="nav-item">
-        <NavLink className={linkClass} to="/tenant-requests">
-          Tenant Requests
-        </NavLink>
-      </li>
-    </>
-  );
+const renderOwnerLinks = () => (
+  <></>
+);
 
   const renderAdminLinks = () => (
   <>
@@ -89,7 +59,7 @@ function Navbar() {
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light shadow-sm bg-white">
-      <div className="container">
+      <div className="container-fluid px-4">
         <Link className="navbar-brand fw-bold" to={dashboardLink}>
           LeaseFlow
         </Link>
