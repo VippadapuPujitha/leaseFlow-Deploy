@@ -491,10 +491,10 @@ const matchesLocation =
                       <span>{property.bedrooms ?? "-"} Beds</span>
                       <span>{property.bathrooms ?? "-"} Baths</span>
                       <span>
-                        {property.area
-                          ? `${property.area} sqft`
-                          : "— sqft"}
-                      </span>
+  {property.squareFeet
+    ? `${property.squareFeet} sqft`
+    : "— sqft"}
+</span>
                     </div>
                   </div>
                 </div>
@@ -510,11 +510,12 @@ const matchesLocation =
 
                   <div className="d-flex gap-2">
                     <Link
-                      className="btn btn-outline-primary btn-sm flex-fill"
-                      to={`/properties/${property._id || property.id}`}
-                    >
-                      View
-                    </Link>
+  className="btn btn-outline-primary btn-sm flex-fill"
+  to={`/properties/${property._id || property.id}`}
+  state={{ from: "/browse-properties" }}
+>
+  View
+</Link>
 
                     <button
                       type="button"

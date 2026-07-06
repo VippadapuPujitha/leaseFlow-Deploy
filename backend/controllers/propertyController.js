@@ -574,6 +574,8 @@ const getOwnerStats = async (req, res) => {
 };
 
 const unhideProperty = async (req, res) => {
+  console.log("UNHIDE API CALLED");
+  console.log("Property ID:", req.params.id);
   try {
     const property = await Property.findByIdAndUpdate(
   req.params.id,

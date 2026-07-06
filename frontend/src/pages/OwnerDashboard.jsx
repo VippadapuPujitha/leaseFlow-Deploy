@@ -41,8 +41,8 @@ console.log("CURRENT PATH:", path);
   const [successMessage, setSuccessMessage] = useState('');
 const [errorMessage, setErrorMessage] = useState('');
 const [dealMessage, setDealMessage] = useState('');
-const [notification, setNotification] = useState("");
-const [notificationType, setNotificationType] = useState("success");
+const [updateMessage, setUpdateMessage] = useState("");
+const [requestMessage, setRequestMessage] = useState("");
 const [deleteMessage, setDeleteMessage] = useState("");
 const [isEditMode, setIsEditMode] = useState(false);
 const [filter, setFilter] = useState("all");
@@ -55,26 +55,20 @@ const [files, setFiles] = useState({
 
 
   // ---------------- FETCH PROPERTIES ----------------
-  useEffect(() => {
-  console.log("USER:", user);
-
-  if (!user?.id) return;
-
   const fetchProperties = async () => {
-    try {
-      const res = await api.get(
-        `/api/properties/owner/${user.id}`
-      );
+  try {
+    const res = await api.get(`/api/properties/owner/${user.id}`);
 
-      console.log("Owner Properties Response:", res.data);
+    setProperties(res.data.properties || []);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
-      setProperties(res.data.properties || []);
-    } catch (err) {
-      console.log("Fetch Error:", err);
-    }
-  };
-
-  fetchProperties();
+useEffect(() => {
+  if (user) {
+    fetchProperties();
+  }
 }, [user]);
 
   // ---------------- FETCH REQUESTS ----------------
@@ -95,20 +89,6 @@ const [files, setFiles] = useState({
 
   fetchRequests();
 }, [path]);
-
-const showNotification = (message, type = "success") => {
-  setNotification(message);
-  setNotificationType(type);
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth",
-  });
-
-  setTimeout(() => {
-    setNotification("");
-  }, 3000);
-};
 
   // ---------------- FORM HANDLERS ----------------
   const handleChange = (key, value) => {
@@ -168,7 +148,7 @@ console.log("FORM:", form);
 
       setForm(initialForm);
       setFiles({ images: [], ownershipDoc: null, taxDoc: null, idProof: null });
-      showNotification("✅ Property added successfully!");
+      setSuccessMessage('Property added successfully!');
     } catch (err) {
   console.log("ERROR:", err);
   console.log("RESPONSE:", err.response?.data);
@@ -188,7 +168,10 @@ const handleUpdate = async () => {
 
     console.log(res.data);
 
-    showNotification("✅ Property updated successfully!");
+    setUpdateMessage("Property updated successfully");
+    setTimeout(() => {
+      setDeleteMessage("");
+    }, 3000);
     setIsEditMode(false);
 
     fetchProperties(); // reload properties
@@ -200,21 +183,45 @@ const handleUpdate = async () => {
   }
 };
 
-  // ---------------- DELETE ----------------
-  const handleDelete = async (id) => {
+ const handleDelete = async (id) => {
   try {
-    await api.delete(`/api/properties/${id}`);
+    const property = properties.find(p => p._id === id);
 
-    setProperties(prev => prev.filter(p => p._id !== id));
+    if (property.rentalStatus === "occupied" || property.rentalStatus === "rented") {
+      // Occupied -> Make Available Again
+      await api.patch(`/api/properties/unhide/${id}`);
 
-    setDeleteMessage("Property deleted successfully");
+      setProperties(prev =>
+        prev.map(p =>
+          p._id === id
+            ? {
+                ...p,
+                isHidden: false,
+                rentalStatus: "available",
+                status: "ACTIVE"
+              }
+            : p
+        )
+      );
+
+      setDeleteMessage("Property is available again.");
+    } else {
+      // All / Available -> Permanently Delete
+      await api.delete(`/api/properties/${id}`);
+
+      setProperties(prev =>
+        prev.filter(p => p._id !== id)
+      );
+
+      setDeleteMessage("Property deleted successfully.");
+    }
 
     setTimeout(() => {
       setDeleteMessage("");
     }, 3000);
 
   } catch (err) {
-    console.log("DELETE ERROR:", err.response?.data || err);
+    console.log(err.response?.data || err);
   }
 };
 
@@ -228,15 +235,18 @@ const handleUpdate = async () => {
     r._id === id
       ? {
           ...r,
-          status: "pending",
-          ownerAccepted: true,
-          contactShared: true,
+          status: "accepted",
+          showDealButton: true,
         }
       : r
   )
 );
 
-    showNotification("✅ Request accepted successfully!");
+    setRequestMessage("✅ Request accepted successfully!");
+
+    setTimeout(() => {
+      setRequestMessage("");
+    }, 3000);
 
   } catch (err) {
     console.log(err);
@@ -275,7 +285,6 @@ const handleUnhideProperty = async (id) => {
           : p
       )
     );
-    showNotification("✅ Unhide Successfully!");
   } catch (err) {
     console.log("UNHIDE ERROR:", err);
     console.log("STATUS:", err.response?.status);
@@ -319,30 +328,46 @@ const handleUnhideProperty = async (id) => {
 console.log("FINALIZE RESPONSE:", res.data);
 
     if (decision === "success") {
-      showNotification("🎉 Deal completed successfully!");
       setDealMessage(
   "Deal completed successfully. Property has been marked as hidden."
 );
     } else {
-      showNotification("Deal cancelled!");
+      setDealMessage(
+        "Deal cancelled successfully."
+      );
     }
+
    setRequests(prev =>
-    prev.map(r =>
-        r._id === id
-            ? {
-                  ...r,
-                  status: decision === "success" ? "accepted" : "cancelled",
-                  ownerAccepted: false,
-              }
-            : r
-    )
+  prev.map(r =>
+    r._id === id
+      ? {
+          ...r,
+          status:
+            decision === "success"
+              ? "occupied"
+              : "cancelled",
+          finalStatus: decision,
+          showDealButton: false,
+          property: {
+            ...r.property,
+            rentalStatus:
+              decision === "success"
+                ? "occupied"
+                : "available",
+          },
+        }
+      : r
+  )
 );
 
     const propRes = await api.get(
-      `/api/properties/owner/${user.id}`
-    );
+  `/api/properties/owner/${user.id}`
+);
 
-    setProperties(propRes.data.properties || []);
+console.log(propRes.data.properties);
+
+setProperties(propRes.data.properties || []);
+
     const reqRes = await api.get("/api/requests/owner");
 
 setRequests(reqRes.data.requests || []);
@@ -360,8 +385,8 @@ setRequests(reqRes.data.requests || []);
     p => p.rentalStatus === "available"
   ).length,
   occupied: properties.filter(
-    p => p.rentalStatus === "rented"
-  ).length,
+  p => p.rentalStatus === "occupied"
+).length,
   hidden: properties.filter(
     p => p.isHidden
   ).length,
@@ -377,29 +402,6 @@ const hiddenProperties = properties.filter(
       <div style={styles.layoutContainer}>
         <OwnerSidebar />
 
-
-      {/* MAIN */}
-      <main style={styles.main}>
-        {notification && (
-  <div
-    style={{
-      position: "fixed",
-      top: "20px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      backgroundColor:
-        notificationType === "success" ? "#22c55e" : "#ef4444",
-      color: "#fff",
-      padding: "12px 24px",
-      borderRadius: "8px",
-      fontWeight: "600",
-      zIndex: 9999,
-      boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-    }}
-  >
-    {notification}
-  </div>
-)}
         {/* MAIN */}
         <main style={styles.mainContent}>
 
@@ -834,6 +836,17 @@ const hiddenProperties = properties.filter(
 {/* PROPERTIES */}
 {path === "/my-properties" && (
   <>
+    {updateMessage && (
+      <div style={{
+        background: "#d1fae5",
+        color: "#065f46",
+        padding: "10px",
+        borderRadius: "6px",
+        marginBottom: "15px",
+      }}>
+        {updateMessage}
+      </div>
+    )}
 
     {isEditMode && selectedProperty && (
       <div style={styles.card}>
@@ -1117,93 +1130,154 @@ const hiddenProperties = properties.filter(
 
 </div>
 
-    <div className="property-grid">
-      {properties
-  .filter((p) => {
-    if (filter === "available")
-      return p.rentalStatus === "available";
+    
 
-    if (filter === "occupied")
-      return p.rentalStatus === "occupied" || p.rentalStatus === "rented";
+      <div className="property-grid">
+  {(() => {
+    const filteredProperties = properties.filter((p) => {
+      if (filter === "available")
+        return p.rentalStatus === "available";
 
-    if (filter === "hidden")
-      return p.isHidden;
+      if (filter === "occupied")
+        return (
+          p.rentalStatus === "occupied" ||
+          p.rentalStatus === "rented"
+        );
 
-    return true;
-  })
-        .map((p) => (
-          <div key={p._id} className="property-card">
-            <div className="property-header">
-              <div>
-                <h3>{p.title}</h3>
-                <p className="property-city">📍 {p.city}</p>
-              </div>
+      if (filter === "hidden")
+        return p.isHidden;
 
-              <span className={`status ${p.rentalStatus}`}>
-                {p.rentalStatus}
-              </span>
-            </div>
+      return true;
+    });
 
-            <div className="property-info">
-              <div>
-                <small>Monthly Rent</small>
-                <h2>₹{p.rent}</h2>
-              </div>
+    if (filteredProperties.length === 0) {
+      let message = "No properties found.";
 
-              <div>
-                <small>Bedrooms</small>
-                <h4>{p.bedrooms}</h4>
-              </div>
+      if (filter === "available")
+        message = "There are no available properties.";
 
-              <div>
-                <small>Bathrooms</small>
-                <h4>{p.bathrooms}</h4>
-              </div>
-            </div>
+      else if (filter === "occupied")
+        message = "There are no occupied properties.";
 
-            <div className="property-actions">
-              <button
-                onClick={() => {
-                  setSelectedProperty(p);
-                  setIsEditMode(true);
-                  setForm({
-                    title: p.title || "",
-                    propertyType: p.propertyType || "Apartment",
-                    address: p.address || "",
-                    city: p.city || "",
-                    rent: p.rent || "",
-                    description: p.description || "",
-                    latitude: p.latitude || "",
-                    longitude: p.longitude || "",
-                    bedrooms: p.bedrooms || "",
-                    bathrooms: p.bathrooms || "",
-                    squareFeet: p.squareFeet || "",
-                    availableFrom: p.availableFrom
-                      ? p.availableFrom.split("T")[0]
-                      : "",
-                  });
-                }}
-                className="edit-btn"
-              >
-                Edit
-              </button>
+      else if (filter === "hidden")
+        message = "There are no hidden properties.";
 
-              <button
-                onClick={() => handleDelete(p._id)}
-                className="delete-btn"
-              >
-                Delete
-              </button>
-            </div>
+      else if (filter === "all")
+        message = "There are no properties.";
+
+      return (
+        <div
+          style={{
+            width: "100%",
+            textAlign: "center",
+            padding: "50px",
+            fontSize: "22px",
+            fontWeight: "600",
+            color: "#666",
+          }}
+        >
+          {message}
+        </div>
+      );
+    }
+
+    return filteredProperties.map((p) => (
+      <div key={p._id} className="property-card">
+        <div className="property-header">
+          <div>
+            <h3>{p.title}</h3>
+            <p className="property-city">📍 {p.city}</p>
           </div>
-      ))}
+
+          <span className={`status ${p.rentalStatus}`}>
+            {p.rentalStatus}
+          </span>
+        </div>
+
+        <div className="property-info">
+          <div>
+            <small>Monthly Rent</small>
+            <h2>₹{p.rent}</h2>
+          </div>
+
+          <div>
+            <small>Bedrooms</small>
+            <h4>{p.bedrooms}</h4>
+          </div>
+
+          <div>
+            <small>Bathrooms</small>
+            <h4>{p.bathrooms}</h4>
+          </div>
+        </div>
+
+        <div className="property-actions">
+          <button
+            onClick={() => {
+              setSelectedProperty(p);
+              setIsEditMode(true);
+              setForm({
+                title: p.title || "",
+                propertyType: p.propertyType || "Apartment",
+                address: p.address || "",
+                city: p.city || "",
+                rent: p.rent || "",
+                description: p.description || "",
+                latitude: p.latitude || "",
+                longitude: p.longitude || "",
+                bedrooms: p.bedrooms || "",
+                bathrooms: p.bathrooms || "",
+                squareFeet: p.squareFeet || "",
+                availableFrom: p.availableFrom
+                  ? p.availableFrom.split("T")[0]
+                  : "",
+              });
+            }}
+            className="edit-btn"
+          >
+            Edit
+          </button>
+
+          <button
+            onClick={() => handleDelete(p._id)}
+            className="delete-btn"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+            ));
+      })()}
     </div>
   </>
 )}
 
 {path === "/tenant-requests" && (
   <div>
-    
+    {dealMessage && (
+      <div style={{
+        background: "#dcfce7",
+        color: "#166534",
+        padding: "10px",
+        borderRadius: "6px",
+        marginBottom: "15px"
+      }}>
+        {dealMessage}
+      </div>
+    )}
+    {requestMessage && (
+  <div
+    style={{
+      background: "#dcfce7",
+      color: "#166534",
+      padding: "10px",
+      borderRadius: "6px",
+      marginBottom: "15px"
+    }}
+  >
+    {requestMessage}
+  </div>
+)}
 
     <h2>Tenant Requests</h2>
 
@@ -1228,7 +1302,7 @@ const hiddenProperties = properties.filter(
 
 </div>
 
-          {r.status === "pending" && !r.ownerAccepted && (
+          {r.status === "pending" && (
   <div className="request-actions">
     <button
       className="accept-btn"
@@ -1246,34 +1320,39 @@ const hiddenProperties = properties.filter(
   </div>
 )}
 
-{r.ownerAccepted && (
-  <div className="request-actions">
+          {r.status === "accepted" && r.showDealButton && (
+  <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
     <button
-      className="deal-btn"
+className="deal-btn"
       onClick={() => handleFinalize(r._id, "success")}
     >
-      Deal Successful
+      Deal Completed
     </button>
 
     <button
-      className="cancel-btn"
-      onClick={() => handleFinalize(r._id, "fail")}
-    >
+className="cancel-btn"
+onClick={()=>handleFinalize(r._id,"fail")}
+>
       Deal Cancelled
-    </button>
-  </div>
-)}
+</button>
+    </div>
 
-        </div> {/* request-card */}
-      ))}
-    </div> {/* request-grid */}
-  </div>
-)}
+)}      {/* closes accepted condition*/}
 
-      </main>
+</div>   // closes request-card
+
+))}      {/* closes requests.map*/}
+
+</div>  { /* closes request-grid*/}
+
+</div>   // closes tenant wrapper
+
+)}       {/* closes path condition*/}
+
+</main>
     </div>
   </div>
-);
+  );
 }
 const styles = {
   pageWrapper: { 
