@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import AdminVerificationBadge from '../components/AdminVerificationBadge';
 import {
   ADMIN_DATA_UPDATED_EVENT,
   deleteProperty,
@@ -128,9 +129,7 @@ function AllProperties() {
                     <td>{property.title}</td>
                     <td>{property.ownerId?.name || property.ownerDetails?.name || 'Owner unavailable'}</td>
                     <td>
-                      <span className={`status-pill status-pill--${normalizeStatus(property.verificationStatus)}`}>
-                        {getVerificationLabel(property)}
-                      </span>
+                      <AdminVerificationBadge verificationStatus={property.verificationStatus} />
                       {normalizeStatus(property.verificationStatus) === 'verified' && (
                         <div className="text-muted small mt-1">Verified status</div>
                       )}

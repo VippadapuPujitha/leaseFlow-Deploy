@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import AdminVerificationBadge from '../components/AdminVerificationBadge';
 import {
   getAdminPropertyById,
   notifyAdminDataChanged,
@@ -55,6 +56,7 @@ function VerificationDetails() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+  const [showRejectConfirmation, setShowRejectConfirmation] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState('');
   const [previewImageLabel, setPreviewImageLabel] = useState('');
 
@@ -91,6 +93,7 @@ function VerificationDetails() {
       const response = await verifyProperty(id);
       setProperty(response.data.property || property);
       setRejectionReason('');
+      setShowRejectConfirmation(false);
       setMessage('Property verified successfully.');
       notifyAdminDataChanged();
     } catch (approveError) {
@@ -100,7 +103,13 @@ function VerificationDetails() {
     }
   };
 
-  const handleReject = async () => {
+  const handleRejectClick = () => {
+    setError('');
+    setMessage('');
+    setShowRejectConfirmation(true);
+  };
+
+  const handleConfirmReject = async () => {
     if (!rejectionReason.trim()) {
       setError('Please add a rejection reason before rejecting the property.');
       return;
@@ -113,6 +122,7 @@ function VerificationDetails() {
     try {
       const response = await rejectProperty(id, rejectionReason.trim());
       setProperty(response.data.property || property);
+      setShowRejectConfirmation(false);
       setMessage('Property rejected successfully.');
       notifyAdminDataChanged();
     } catch (rejectError) {
@@ -185,8 +195,14 @@ function VerificationDetails() {
             <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
               <div>
                 <h2 className="h4 mb-2">{property.title}</h2>
-                <span className={`status-pill status-pill--${status}`}>{statusLabel}</span>
-                {status === 'verified' && <div className="text-success small mt-2">Verified status</div>}
+                {status === 'verified' && (
+                  <div className="verified-stamp verified-stamp--inline" aria-hidden>
+                    <span className="check">✓</span>
+                    VERIFIED
+                  </div>
+                )}
+                <AdminVerificationBadge verificationStatus={property.verificationStatus} />
+                {status === 'verified' && <div className="text-success small mt-3">Verified status</div>}
                 {status === 'rejected' && (
                   <div className="text-danger small mt-2">
                     {property.rejectionReason || 'No rejection reason provided.'}
@@ -296,27 +312,39 @@ function VerificationDetails() {
 
           <div className="card card-glass p-4">
             <h3 className="h5 mb-3">Admin Actions</h3>
-            <div className="mb-3">
-              <label className="form-label" htmlFor="rejectionReason">
-                Rejection Reason
-              </label>
-              <textarea
-                id="rejectionReason"
-                className="form-control"
-                rows="4"
-                value={rejectionReason}
-                onChange={(event) => setRejectionReason(event.target.value)}
-                placeholder="Explain why this property should be rejected"
-              />
-            </div>
             <div className="d-grid gap-2">
               <button type="button" className="btn btn-gradient" onClick={handleApprove} disabled={saving}>
                 Approve
               </button>
-              <button type="button" className="btn btn-outline-danger" onClick={handleReject} disabled={saving}>
+              <button type="button" className="btn btn-outline-danger" onClick={handleRejectClick} disabled={saving}>
                 Reject
               </button>
             </div>
+            {showRejectConfirmation && (
+              <div className="mt-3">
+                <div className="mb-3">
+                  <label className="form-label" htmlFor="rejectionReason">
+                    Rejection Reason
+                  </label>
+                  <textarea
+                    id="rejectionReason"
+                    className="form-control"
+                    rows="4"
+                    value={rejectionReason}
+                    onChange={(event) => setRejectionReason(event.target.value)}
+                    placeholder="Explain why this property should be rejected"
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-outline-danger w-100"
+                  onClick={handleConfirmReject}
+                  disabled={saving}
+                >
+                  Confirm Reject
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import AdminVerificationBadge from '../components/AdminVerificationBadge';
 import {
   ADMIN_DATA_UPDATED_EVENT,
   getVerificationQueue,
@@ -91,9 +92,7 @@ function VerificationRequests() {
                     <td>{property.title}</td>
                     <td>{property.ownerId?.name || property.ownerDetails?.name || 'Owner unavailable'}</td>
                     <td>
-                      <span className={`status-pill status-pill--${normalizeStatus(property.verificationStatus)}`}>
-                        {normalizeStatus(property.verificationStatus)}
-                      </span>
+                      <AdminVerificationBadge verificationStatus={property.verificationStatus} />
                     </td>
                     <td>
                       <Link to={`/admin/verification/${property._id}`} className="btn btn-sm btn-outline-primary">

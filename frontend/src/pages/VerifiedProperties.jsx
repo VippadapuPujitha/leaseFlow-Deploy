@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import AdminVerificationBadge from '../components/AdminVerificationBadge';
 import { getAdminProperties } from '../services/adminService';
 
 const normalizeVerificationStatus = (status) => {
@@ -78,7 +79,7 @@ function VerifiedProperties() {
                     <td>{property.propertyType || 'N/A'}</td>
                     <td>{property.ownerId?.name || property.ownerDetails?.name || 'Owner unavailable'}</td>
                     <td>
-                      <span className="status-pill status-pill--verified">Verified</span>
+                      <AdminVerificationBadge verificationStatus={property.verificationStatus} />
                     </td>
                     <td>
                       {property.imageUrls?.length ? (
