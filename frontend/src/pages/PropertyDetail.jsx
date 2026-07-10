@@ -239,47 +239,7 @@ const prevImage = () => {
   </div>
 
 </div>
-{/* Lightbox */}
-{showLightbox && (
-  <div
-    className="lightbox-overlay"
-    onClick={() => setShowLightbox(false)}
-  >
-    <button
-      className="lightbox-close"
-      onClick={() => setShowLightbox(false)}
-    >
-      ✕
-    </button>
 
-    <button
-      className="lightbox-prev"
-      onClick={(e) => {
-        e.stopPropagation();
-        prevImage();
-      }}
-    >
-      ❮
-    </button>
-
-    <img
-      src={property.images[selectedImage]}
-      alt="Property"
-      className="lightbox-image"
-      onClick={(e) => e.stopPropagation()}
-    />
-
-    <button
-      className="lightbox-next"
-      onClick={(e) => {
-        e.stopPropagation();
-        nextImage();
-      }}
-    >
-      ❯
-    </button>
-  </div>
-)}
     </div>
   );
   
