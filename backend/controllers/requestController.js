@@ -232,8 +232,8 @@ exports.finalizeDeal = async (req, res) => {
     request.contactShared = true;
 
     await Property.findByIdAndUpdate(request.property._id, {
-    rentalStatus: "rented",
-    isHidden: false,
+    rentalStatus: "occupied",
+    isHidden: true,
     status: "LOCKED",
 });
 

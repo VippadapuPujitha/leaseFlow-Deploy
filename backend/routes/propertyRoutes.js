@@ -47,8 +47,17 @@ router.get("/owner/:ownerId", authMiddleware,getOwnerProperties);
 router.get("/owner-stats/:ownerId",authMiddleware, getOwnerStats);
 router.get("/:id", getPropertyById);
 
-/* ---------------- UPDATE ---------------- */
-router.put("/:id", authMiddleware,updateProperty);
+router.put(
+  "/:id",
+  authMiddleware,
+  upload.fields([
+    { name: "images", maxCount: 10 },
+    { name: "taxReceipt", maxCount: 1 },
+    { name: "aadhaarPan", maxCount: 1 },
+    { name: "electricityBill", maxCount: 1 }
+  ]),
+  updateProperty
+);
 
 /* ---------------- DELETE ---------------- */
 router.delete("/:id", authMiddleware, deleteProperty);

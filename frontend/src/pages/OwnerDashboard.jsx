@@ -169,114 +169,73 @@ console.log("FORM:", form);
   // ---------------- UPDATE PROPERTY ----------------
 const handleUpdate = async () => {
   try {
-    console.log("Updating property:", selectedProperty._id);
-    console.log("Form Data:", form);
+    const formData = new FormData();
+
+    formData.append("title", form.title);
+    formData.append("propertyType", form.propertyType);
+    formData.append("address", form.address);
+    formData.append("city", form.city);
+
+    formData.append("rent", Number(form.rent));   // important
+    formData.append("description", form.description);
+
+    formData.append("bedrooms", Number(form.bedrooms));
+    formData.append("bathrooms", Number(form.bathrooms));
+
+    formData.append("latitude", Number(form.latitude));
+    formData.append("longitude", Number(form.longitude));
+
+    formData.append("squareFeet", Number(form.squareFeet));
+    formData.append("availableFrom", form.availableFrom);
+
+
+    if (files.images?.length) {
+  files.images.forEach((img) => {
+    formData.append("images", img);
+  });
+}
+
+if (files.ownershipDoc) {
+  formData.append(
+    "electricityBill",
+    files.ownershipDoc
+  );
+}
+
+if (files.taxDoc) {
+  formData.append(
+    "taxReceipt",
+    files.taxDoc
+  );
+}
+
+if (files.idProof) {
+  formData.append(
+    "aadhaarPan",
+    files.idProof
+  );
+}
+
 
     const res = await api.put(
-      `/api/properties/${selectedProperty._id}`,
-      form
-    );
+  `/api/properties/${selectedProperty._id}`,
+  formData,
+  {
+    headers:{
+      "Content-Type":"multipart/form-data"
+    }
+  }
+);
 
-    console.log(res.data);
 
     setUpdateMessage("Property updated successfully");
-    setTimeout(() => {
-      setDeleteMessage("");
-    }, 3000);
+
     setIsEditMode(false);
 
-    fetchProperties(); // reload properties
-  } catch (err) {
-    console.log(
-      "UPDATE ERROR:",
-      err.response?.data || err.message
-    );
-  }
-};
+    fetchProperties();
 
-  const handleDelete = async (id) => {
-  const property = properties.find((p) => p._id === id);
-
-  const result = await Swal.fire({
-    title:
-      property?.rentalStatus === "occupied" ||
-      property?.rentalStatus === "rented"
-        ? "Make Property Available?"
-        : "Delete Property?",
-    text:
-      property?.rentalStatus === "occupied" ||
-      property?.rentalStatus === "rented"
-        ? "This property will become available for new tenants."
-        : "Are you sure you want to permanently delete this property? This action cannot be undone.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#2563eb",
-    cancelButtonColor: "#ef4444",
-    confirmButtonText:
-      property?.rentalStatus === "occupied" ||
-      property?.rentalStatus === "rented"
-        ? "Yes, Make Available"
-        : "Yes, Delete",
-    cancelButtonText: "Cancel",
-    reverseButtons: true,
-    focusCancel: true,
-  });
-
-  if (!result.isConfirmed) return;
-
-  try {
-    if (
-      property.rentalStatus === "occupied" ||
-      property.rentalStatus === "rented"
-    ) {
-      // Make property available again
-      await api.patch(`/api/properties/unhide/${id}`);
-
-      setProperties((prev) =>
-        prev.map((p) =>
-          p._id === id
-            ? {
-                ...p,
-                isHidden: false,
-                rentalStatus: "available",
-                status: "ACTIVE",
-              }
-            : p
-        )
-      );
-
-      Swal.fire({
-        icon: "success",
-        title: "Success!",
-        text: "Property is available again.",
-        confirmButtonColor: "#2563eb",
-        timer: 2000,
-        showConfirmButton: false,
-      });
-    } else {
-      // Permanently delete property
-      await api.delete(`/api/properties/${id}`);
-
-      setProperties((prev) => prev.filter((p) => p._id !== id));
-
-      Swal.fire({
-        icon: "success",
-        title: "Deleted!",
-        text: "Property deleted successfully.",
-        confirmButtonColor: "#2563eb",
-        timer: 2000,
-        showConfirmButton: false,
-      });
-    }
-  } catch (err) {
-    console.log(err.response?.data || err);
-
-    Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: "Something went wrong. Please try again.",
-      confirmButtonColor: "#2563eb",
-    });
+  } catch(error){
+    console.log(error);
   }
 };
 
@@ -426,12 +385,17 @@ setRequests(reqRes.data.requests || []);
   // ---------------- STATS ----------------
   const summary = useMemo(() => ({
   total: properties.length,
+
   available: properties.filter(
     p => p.rentalStatus === "available"
   ).length,
+
   occupied: properties.filter(
-  p => p.rentalStatus === "occupied"
-).length,
+    p =>
+      p.rentalStatus === "occupied" ||
+      p.rentalStatus === "rented"
+  ).length,
+
   hidden: properties.filter(
     p => p.isHidden
   ).length,
@@ -718,7 +682,9 @@ const filteredRequests = requests.filter((r) => {
       type="number"
       placeholder="Rent"
       value={form.rent}
-      onChange={(e) => handleChange("rent", e.target.value)}
+      onChange={(e) => {
+  handleChange("rent", e.target.value);
+}}
     />
   </div>
 
