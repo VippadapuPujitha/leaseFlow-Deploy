@@ -233,7 +233,7 @@ exports.finalizeDeal = async (req, res) => {
 
     await Property.findByIdAndUpdate(request.property._id, {
     rentalStatus: "rented",
-    isHidden: true,
+    isHidden: false,
     status: "LOCKED",
 });
 
@@ -259,5 +259,23 @@ exports.finalizeDeal = async (req, res) => {
       success: false,
       message: err.message,
     });
+  }
+};
+/* ================= DELETE EXPIRED REQUESTS ================= */
+
+exports.deleteExpiredRequests = async () => {
+  try {
+    const expiryTime = new Date(Date.now() - 1 * 60 * 1000);
+
+    const result = await Request.deleteMany({
+      status: "pending",
+      ownerAccepted: false,
+      createdAt: { $lt: expiryTime }
+    });
+
+    console.log(`${result.deletedCount} expired requests deleted`);
+
+  } catch (error) {
+    console.log("Delete expired requests error:", error.message);
   }
 };

@@ -2,16 +2,17 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
-
+dotenv.config();
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const requestRoutes = require("./routes/requestRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const cron = require("node-cron");
+const { deleteExpiredRequests } = require("./controllers/requestController");
 
 
-dotenv.config();
 
 connectDB();
 
@@ -48,7 +49,10 @@ app.use("/api/admin", adminRoutes);
 app.get("/", (req, res) => {
   res.send("LeaseFlow API Working");
 });
-
+cron.schedule("* * * * *", async () => {
+  console.log("Checking expired rental requests...");
+  await deleteExpiredRequests();
+});
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

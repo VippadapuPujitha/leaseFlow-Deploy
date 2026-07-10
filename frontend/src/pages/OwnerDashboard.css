@@ -121,6 +121,22 @@ color:#DC2626;
     box-shadow:0 8px 25px rgba(0,0,0,.08);
 }
 
+.choose-file-btn{
+    display:inline-block;
+    padding:8px 14px;
+    border:1px solid #bdbdbd;
+    border-radius:6px;
+    background:#f5f5f5;
+    color:"black";
+    cursor:pointer;
+    font-size:14px;
+    transition:.3s;
+}
+
+.choose-file-btn:hover{
+    background:#e9e9e9;
+}
+
 .action-btn{
     width:100%;
     margin-top:15px;
@@ -130,7 +146,7 @@ color:#DC2626;
     padding:14px;
     border-radius:12px;
     cursor:pointer;
-    font-weight:600;
+    font-weight:700;
     transition:.3s;
 }
 
@@ -275,7 +291,23 @@ padding-top:20px;
     background:#ef4444;
     transform:translateY(-2px);
 }
+.hide-btn{
+    flex:1;
+    padding:12px;
+    background:#f59e0b;
+    color:white;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+    transition:.3s;
+    box-shadow:0 6px 15px rgba(245,158,11,.25);
+}
 
+.hide-btn:hover{
+    background:#d97706;
+    transform:translateY(-2px);
+}
 .restore-btn{
 width:100%;
 margin-top:20px;

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext.jsx';
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import OwnerSidebar from '../components/OwnerSidebar';
 import "./OwnerDashboard.css";
-
+import Swal from "sweetalert2";
 import {
   FiHome,
   FiCheckCircle,
@@ -31,11 +31,12 @@ const initialForm = {
 function OwnerDashboard() {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 const path = location.pathname;
 console.log("CURRENT PATH:", path);
   const [properties, setProperties] = useState([]);
   const [requests, setRequests] = useState([]);
-  
+  const [requestFilter, setRequestFilter] = useState("all");
   const [form, setForm] = useState(initialForm);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
@@ -96,8 +97,18 @@ useEffect(() => {
   };
 
   const handleFile = (key, value) => {
-    setFiles(prev => ({ ...prev, [key]: value }));
-  };
+  if (key === "images") {
+    setFiles((prev) => ({
+      ...prev,
+      images: [...prev.images, ...value],
+    }));
+  } else {
+    setFiles((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  }
+};
 
 
 
@@ -183,71 +194,104 @@ const handleUpdate = async () => {
   }
 };
 
- const handleDelete = async (id) => {
-  try {
-    const property = properties.find(p => p._id === id);
+  const handleDelete = async (id) => {
+  const property = properties.find((p) => p._id === id);
 
-    if (property.rentalStatus === "occupied" || property.rentalStatus === "rented") {
-      // Occupied -> Make Available Again
+  const result = await Swal.fire({
+    title:
+      property?.rentalStatus === "occupied" ||
+      property?.rentalStatus === "rented"
+        ? "Make Property Available?"
+        : "Delete Property?",
+    text:
+      property?.rentalStatus === "occupied" ||
+      property?.rentalStatus === "rented"
+        ? "This property will become available for new tenants."
+        : "Are you sure you want to permanently delete this property? This action cannot be undone.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#2563eb",
+    cancelButtonColor: "#ef4444",
+    confirmButtonText:
+      property?.rentalStatus === "occupied" ||
+      property?.rentalStatus === "rented"
+        ? "Yes, Make Available"
+        : "Yes, Delete",
+    cancelButtonText: "Cancel",
+    reverseButtons: true,
+    focusCancel: true,
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    if (
+      property.rentalStatus === "occupied" ||
+      property.rentalStatus === "rented"
+    ) {
+      // Make property available again
       await api.patch(`/api/properties/unhide/${id}`);
 
-      setProperties(prev =>
-        prev.map(p =>
+      setProperties((prev) =>
+        prev.map((p) =>
           p._id === id
             ? {
                 ...p,
                 isHidden: false,
                 rentalStatus: "available",
-                status: "ACTIVE"
+                status: "ACTIVE",
               }
             : p
         )
       );
 
-      setDeleteMessage("Property is available again.");
+      Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: "Property is available again.",
+        confirmButtonColor: "#2563eb",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } else {
-      // All / Available -> Permanently Delete
+      // Permanently delete property
       await api.delete(`/api/properties/${id}`);
 
-      setProperties(prev =>
-        prev.filter(p => p._id !== id)
-      );
+      setProperties((prev) => prev.filter((p) => p._id !== id));
 
-      setDeleteMessage("Property deleted successfully.");
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Property deleted successfully.",
+        confirmButtonColor: "#2563eb",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     }
-
-    setTimeout(() => {
-      setDeleteMessage("");
-    }, 3000);
-
   } catch (err) {
     console.log(err.response?.data || err);
+
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Something went wrong. Please try again.",
+      confirmButtonColor: "#2563eb",
+    });
   }
 };
 
   // ---------------- REQUEST ACTIONS ----------------
-  const handleAccept = async (id) => {
+ const handleAccept = async (id) => {
   try {
     await api.patch(`/api/requests/accept/${id}`);
 
-  setRequests(prev =>
-  prev.map(r =>
-    r._id === id
-      ? {
-          ...r,
-          status: "accepted",
-          showDealButton: true,
-        }
-      : r
-  )
-);
+    const res = await api.get("/api/requests/owner");
+    setRequests(res.data.requests);
 
-    setRequestMessage("✅ Request accepted successfully!");
-
+    setRequestMessage("Request accepted successfully!");
     setTimeout(() => {
-      setRequestMessage("");
+      setDeleteMessage("");
     }, 3000);
-
   } catch (err) {
     console.log(err);
   }
@@ -255,17 +299,18 @@ const handleUpdate = async () => {
 
 const handleHideProperty = async (id) => {
   try {
-    await api.patch(`/api/properties/hide/${id}`);
+    await api.put(`/properties/hide/${id}`);
 
     setProperties((prev) =>
-      prev.map((p) =>
-        p._id === id
-          ? { ...p, isHidden: true }
-          : p
+      prev.map((property) =>
+        property._id === id
+          ? { ...property, isHidden: true }
+          : property
       )
     );
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.error(error);
+    alert("Failed to hide property.");
   }
 };
 const handleUnhideProperty = async (id) => {
@@ -395,6 +440,11 @@ setRequests(reqRes.data.requests || []);
 const hiddenProperties = properties.filter(
   p => p.isHidden
 );
+
+const filteredRequests = requests.filter((r) => {
+  if (requestFilter === "all") return true;
+  return r.status === requestFilter;
+});
 
   return (
     <div style={styles.pageWrapper}>
@@ -788,16 +838,36 @@ const hiddenProperties = properties.filter(
   </div>
 </div>
       <div style={styles.row}>
-  <div style={styles.fileBox}>
-    <label>
-      Images <span style={{ color: "red" }}>*</span>
+    <div style={styles.fileBox}>
+  <label>
+    Images <span style={{ color: "red" }}>*</span>
+  </label>
+
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "12px",
+      marginTop: "8px",
+    }}
+  >
+    <label className="choose-file-btn">
+      Choose Files
+      <input
+        type="file"
+        multiple
+        hidden
+        onChange={(e) => handleFile("images", [...e.target.files])}
+      />
     </label>
-    <input
-      type="file"
-      multiple
-      onChange={(e) => handleFile("images", [...e.target.files])}
-    />
+
+    <span style={{ color: "black", fontSize: "14px" }}>
+      {files.images.length === 0
+        ? "No files chosen"
+        : files.images.map((file) => file.name).join(", ")}
+    </span>
   </div>
+</div>
 
   <div style={styles.fileBox}>
     <label>Ownership Document</label>
@@ -1212,39 +1282,57 @@ const hiddenProperties = properties.filter(
         </div>
 
         <div className="property-actions">
-          <button
-            onClick={() => {
-              setSelectedProperty(p);
-              setIsEditMode(true);
-              setForm({
-                title: p.title || "",
-                propertyType: p.propertyType || "Apartment",
-                address: p.address || "",
-                city: p.city || "",
-                rent: p.rent || "",
-                description: p.description || "",
-                latitude: p.latitude || "",
-                longitude: p.longitude || "",
-                bedrooms: p.bedrooms || "",
-                bathrooms: p.bathrooms || "",
-                squareFeet: p.squareFeet || "",
-                availableFrom: p.availableFrom
-                  ? p.availableFrom.split("T")[0]
-                  : "",
-              });
-            }}
-            className="edit-btn"
-          >
-            Edit
-          </button>
 
-          <button
-            onClick={() => handleDelete(p._id)}
-            className="delete-btn"
-          >
-            Delete
-          </button>
-        </div>
+  <button
+    onClick={() => navigate(`/property/${p._id}`)}
+    className="view-btn"
+  >
+    View
+  </button>
+
+  <button
+    onClick={() => {
+      setSelectedProperty(p);
+      setIsEditMode(true);
+      setForm({
+        title: p.title || "",
+        propertyType: p.propertyType || "Apartment",
+        address: p.address || "",
+        city: p.city || "",
+        rent: p.rent || "",
+        description: p.description || "",
+        latitude: p.latitude || "",
+        longitude: p.longitude || "",
+        bedrooms: p.bedrooms || "",
+        bathrooms: p.bathrooms || "",
+        squareFeet: p.squareFeet || "",
+        availableFrom: p.availableFrom
+          ? p.availableFrom.split("T")[0]
+          : "",
+      });
+    }}
+    className="edit-btn"
+  >
+    Edit
+  </button>
+
+  {!p.isHidden && (
+    <button
+      onClick={() => handleHideProperty(p._id)}
+      className="hide-btn"
+    >
+      Hide
+    </button>
+  )}
+
+  <button
+    onClick={() => handleDelete(p._id)}
+    className="delete-btn"
+  >
+    Delete
+  </button>
+
+</div>
       </div>
             ));
       })()}
@@ -1280,9 +1368,30 @@ const hiddenProperties = properties.filter(
 )}
 
     <h2>Tenant Requests</h2>
+  <div className="filter-bar">
+  <button
+    className={`filter-btn ${requestFilter === "all" ? "active" : ""}`}
+    onClick={() => setRequestFilter("all")}
+  >
+    All
+  </button>
 
+  <button
+    className={`filter-btn ${requestFilter === "accepted" ? "active" : ""}`}
+    onClick={() => setRequestFilter("accepted")}
+  >
+    Accepted
+  </button>
+
+  <button
+    className={`filter-btn ${requestFilter === "cancelled" ? "active" : ""}`}
+    onClick={() => setRequestFilter("cancelled")}
+  >
+    Cancelled
+  </button>
+</div>
     <div className="request-grid">
-      {requests.map((r) => (
+      {filteredRequests.map((r) => (
         <div key={r._id} className="request-card">
           <div className="request-header">
 
@@ -1290,9 +1399,16 @@ const hiddenProperties = properties.filter(
 
 <h3>{r.property?.title}</h3>
 
-<p className="request-user">
-👤 {r.tenant?.name}
-</p>
+<div className="request-user">
+  <p>
+    👤 {r.tenant?.name}
+    {(r.ownerAccepted || r.status === "accepted") && (
+  <span style={{ marginLeft: "15px" }}>
+    📞 {r.tenant?.phone}
+  </span>
+)}
+  </p>
+</div>
 
 </div>
 
@@ -1302,7 +1418,7 @@ const hiddenProperties = properties.filter(
 
 </div>
 
-          {r.status === "pending" && (
+          {r.status === "pending" && !r.ownerAccepted && (
   <div className="request-actions">
     <button
       className="accept-btn"
@@ -1320,23 +1436,22 @@ const hiddenProperties = properties.filter(
   </div>
 )}
 
-          {r.status === "accepted" && r.showDealButton && (
+          {r.status === "pending" && r.ownerAccepted && (
   <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
     <button
-className="deal-btn"
+      className="deal-btn"
       onClick={() => handleFinalize(r._id, "success")}
     >
       Deal Completed
     </button>
 
     <button
-className="cancel-btn"
-onClick={()=>handleFinalize(r._id,"fail")}
->
+      className="cancel-btn"
+      onClick={() => handleFinalize(r._id, "fail")}
+    >
       Deal Cancelled
-</button>
-    </div>
-
+    </button>
+  </div>
 )}      {/* closes accepted condition*/}
 
 </div>   // closes request-card
