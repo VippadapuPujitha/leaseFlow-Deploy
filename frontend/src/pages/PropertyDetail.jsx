@@ -9,6 +9,7 @@ function PropertyDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [requested, setRequested] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
 
   const handleSendRequest = async () => {
   try {
@@ -58,7 +59,17 @@ useEffect(() => {
   const subtitle =
   `${property.address || ""}${property.city ? `, ${property.city}` : ""}` ||
   "Location unavailable";
+const nextImage = () => {
+  setSelectedImage((prev) =>
+    prev === property.images.length - 1 ? 0 : prev + 1
+  );
+};
 
+const prevImage = () => {
+  setSelectedImage((prev) =>
+    prev === 0 ? property.images.length - 1 : prev - 1
+  );
+};
   return (
     <div className="mb-4">
 
@@ -79,24 +90,71 @@ useEffect(() => {
 </div>
     {/* MAIN CARD */}
 <div className="card-glass p-4 mb-4">
+{/* Property Images */}
 
-  {/* Property Image */}
-  <div className="mb-4">
-    {property.images?.length > 0 ? (
-      <img
-        src={property.images[0]}
-        alt={title}
-        className="property-image"
-      />
-    ) : (
-      <div className="property-card__media property-image">
-        <div className="display-6 fw-bold">
-          {title.split(" ").slice(0, 3).join(" ")}
-        </div>
+<div className="property-gallery mb-4">
+
+  {property.images?.length > 0 ? (
+
+    <>
+<div className="main-image-container">
+
+  <button
+    type="button"
+    className="gallery-arrow left"
+    onClick={prevImage}
+  >
+    &#10094;
+  </button>
+
+  <img
+    src={property.images[selectedImage]}
+    alt={title}
+    className="property-image-main"
+  />
+
+  <button
+    type="button"
+    className="gallery-arrow right"
+    onClick={nextImage}
+  >
+    &#10095;
+  </button>
+
+</div>
+
+
+      <div className="thumbnail-scroll">
+
+        {property.images.map((image, index) => (
+
+          <img
+            key={index}
+            src={image}
+            alt={`Property ${index + 1}`}
+            className={`thumbnail ${
+              selectedImage === index ? "active-thumbnail" : ""
+            }`}
+            onClick={() => setSelectedImage(index)}
+          />
+
+        ))}
+
       </div>
-    )}
-  </div>
 
+    </>
+
+  ) : (
+
+    <div className="property-card__media property-image">
+      <div className="display-6 fw-bold">
+        No Images Available
+      </div>
+    </div>
+
+  )}
+
+</div>
   {/* Description */}
   <div className="property-description-card">
     <h3>Property Description</h3>
@@ -130,25 +188,7 @@ useEffect(() => {
       <p>{property.squareFeet ?? "—"} sq ft</p>
     </div>
 
-    <div className="details-card">
-      <strong>Property Type</strong>
-      <p>{property.propertyType || property.type || "Residential"}</p>
-    </div>
 
-      <div className="details-card">
-  <strong>Status</strong>
-  <p>
-    <span
-      className={`badge ${
-        property.status === "Available"
-          ? "bg-success"
-          : "bg-secondary"
-      }`}
-    >
-      {property.status || "Available"}
-    </span>
-  </p>
-</div>
 
 <div className="details-card">
   <strong>Available From</strong>
@@ -176,22 +216,6 @@ useEffect(() => {
   </p>
 </div>
 
-<div className="details-card">
-  <strong>Rental Status</strong>
-  <p>
-    <span
-      className={`badge ${
-        property.rentalStatus === "Available"
-          ? "bg-success"
-          : property.rentalStatus === "Occupied"
-          ? "bg-danger"
-          : "bg-secondary"
-      }`}
-    >
-      {property.rentalStatus || "Available"}
-    </span>
-  </p>
-</div>
 </div>
 
   {/* Buttons */}
@@ -215,9 +239,50 @@ useEffect(() => {
   </div>
 
 </div>
+{/* Lightbox */}
+{showLightbox && (
+  <div
+    className="lightbox-overlay"
+    onClick={() => setShowLightbox(false)}
+  >
+    <button
+      className="lightbox-close"
+      onClick={() => setShowLightbox(false)}
+    >
+      ✕
+    </button>
 
+    <button
+      className="lightbox-prev"
+      onClick={(e) => {
+        e.stopPropagation();
+        prevImage();
+      }}
+    >
+      ❮
+    </button>
+
+    <img
+      src={property.images[selectedImage]}
+      alt="Property"
+      className="lightbox-image"
+      onClick={(e) => e.stopPropagation()}
+    />
+
+    <button
+      className="lightbox-next"
+      onClick={(e) => {
+        e.stopPropagation();
+        nextImage();
+      }}
+    >
+      ❯
+    </button>
+  </div>
+)}
     </div>
   );
+  
 }
 
 export default PropertyDetail;
