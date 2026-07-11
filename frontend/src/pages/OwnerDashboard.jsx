@@ -97,17 +97,26 @@ useEffect(() => {
   };
 
   const handleFile = (key, value) => {
-  if (key === "images") {
-    setFiles((prev) => ({
+
+  console.log("FILE KEY:", key);
+  console.log("SELECTED FILES:", value);
+
+  if(key === "images") {
+
+    setFiles((prev)=>({
       ...prev,
-      images: [...prev.images, ...value],
+      images:value
     }));
+
   } else {
-    setFiles((prev) => ({
+
+    setFiles((prev)=>({
       ...prev,
-      [key]: value,
+      [key]:value
     }));
+
   }
+
 };
 
 
@@ -176,7 +185,8 @@ const handleUpdate = async () => {
     formData.append("address", form.address);
     formData.append("city", form.city);
 
-    formData.append("rent", Number(form.rent));   // important
+    formData.append("rent", Number(form.rent));   
+    console.log("Rent before sending:", form.rent);// important
     formData.append("description", form.description);
 
     formData.append("bedrooms", Number(form.bedrooms));
@@ -228,7 +238,13 @@ if (files.idProof) {
 );
 
 
-    setUpdateMessage("Property updated successfully");
+    Swal.fire({
+    icon: "success",
+    title: "Updated!",
+    text: "Property updated successfully",
+    timer: 2000,
+    showConfirmButton: false
+});
 
     setIsEditMode(false);
 
@@ -255,21 +271,37 @@ if (files.idProof) {
     console.log(err);
   }
 };
-
 const handleHideProperty = async (id) => {
   try {
-    await api.put(`/properties/hide/${id}`);
+    console.log("HIDE ID:", id);
+
+    const response = await api.patch(
+      `/api/properties/hide/${id}`
+    );
+    Swal.fire({
+    icon: "success",
+    title: "Hidden!",
+    text: "Property hidden successfully",
+    timer: 2000,
+    showConfirmButton: false
+});
+    console.log("HIDE RESPONSE:", response.data);
 
     setProperties((prev) =>
-      prev.map((property) =>
-        property._id === id
-          ? { ...property, isHidden: true }
-          : property
-      )
-    );
+  prev.map((p) =>
+    p._id === id
+      ? { ...p, isHidden: true }
+      : p
+  )
+);
   } catch (error) {
-    console.error(error);
-    alert("Failed to hide property.");
+    console.log("HIDE ERROR:", error.response?.data);
+    console.log("STATUS:", error.response?.status);
+
+    alert(
+      error.response?.data?.message ||
+      "Failed to hide property"
+    );
   }
 };
 const handleUnhideProperty = async (id) => {
@@ -279,7 +311,13 @@ const handleUnhideProperty = async (id) => {
     const res = await api.patch(
       `/api/properties/unhide/${id}`
     );
-
+    Swal.fire({
+    icon: "success",
+    title: "Restored!",
+    text: "Property unhidden successfully",
+    timer: 2000,
+    showConfirmButton: false
+});
     console.log("UNHIDE RESPONSE:", res.data);
 
     setProperties((prev) =>
@@ -392,8 +430,7 @@ setRequests(reqRes.data.requests || []);
 
   occupied: properties.filter(
     p =>
-      p.rentalStatus === "occupied" ||
-      p.rentalStatus === "rented"
+      p.rentalStatus === "occupied"
   ).length,
 
   hidden: properties.filter(
@@ -683,6 +720,7 @@ const filteredRequests = requests.filter((r) => {
       placeholder="Rent"
       value={form.rent}
       onChange={(e) => {
+        console.log("Typing:", e.target.value);
   handleChange("rent", e.target.value);
 }}
     />
@@ -1101,7 +1139,7 @@ const filteredRequests = requests.filter((r) => {
     <input
       type="file"
       onChange={(e) =>
-        handleFile("ownershipDocument", e.target.files[0])
+        handleFile("ownershipDoc", e.target.files[0])
       }
     />
   </div>
@@ -1113,7 +1151,7 @@ const filteredRequests = requests.filter((r) => {
     <input
       type="file"
       onChange={(e) =>
-        handleFile("taxDocument", e.target.files[0])
+        handleFile("taxDoc", e.target.files[0])
       }
     />
   </div>
@@ -1176,8 +1214,7 @@ const filteredRequests = requests.filter((r) => {
 
       if (filter === "occupied")
         return (
-          p.rentalStatus === "occupied" ||
-          p.rentalStatus === "rented"
+          p.rentalStatus === "occupied"
         );
 
       if (filter === "hidden")
@@ -1250,7 +1287,7 @@ const filteredRequests = requests.filter((r) => {
         <div className="property-actions">
 
   <button
-    onClick={() => navigate(`/property/${p._id}`)}
+    onClick={() => navigate(`/owner-property/${p._id}`)}
     className="view-btn"
   >
     View
@@ -1258,8 +1295,18 @@ const filteredRequests = requests.filter((r) => {
 
   <button
     onClick={() => {
+      console.log("Rent from DB:", p.rent);
+
       setSelectedProperty(p);
       setIsEditMode(true);
+
+      setFiles({
+        images: [],
+        ownershipDoc: null,
+        taxDoc: null,
+        idProof: null
+      });
+
       setForm({
         title: p.title || "",
         propertyType: p.propertyType || "Apartment",
@@ -1282,7 +1329,15 @@ const filteredRequests = requests.filter((r) => {
     Edit
   </button>
 
-  {!p.isHidden && (
+
+  {p.isHidden ? (
+    <button
+      onClick={() => handleUnhideProperty(p._id)}
+      className="unhide-btn"
+    >
+      Unhide
+    </button>
+  ) : (
     <button
       onClick={() => handleHideProperty(p._id)}
       className="hide-btn"
@@ -1290,6 +1345,7 @@ const filteredRequests = requests.filter((r) => {
       Hide
     </button>
   )}
+
 
   <button
     onClick={() => handleDelete(p._id)}

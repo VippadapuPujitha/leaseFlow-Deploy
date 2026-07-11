@@ -7,7 +7,7 @@ const createProperty = async (req, res) => {
   try {
     console.log("FILES:", req.files);
     console.log("BODY:", req.body);
-
+    console.log("RENT RECEIVED:", req.body.rent);
     const images = req.files?.images?.map(file => file.path) || [];
 
     const property = await Property.create({
@@ -144,7 +144,9 @@ const getPropertyById = async (req, res) => {
 
 const updateProperty = async (req, res) => {
   try {
+    console.log("UPDATE FILES:", req.files);
     console.log("UPDATE BODY:", req.body);
+    
 
     const property = await Property.findById(req.params.id);
 
@@ -177,6 +179,22 @@ const updateProperty = async (req, res) => {
 
     property.squareFeet = req.body.squareFeet;
     property.availableFrom = req.body.availableFrom;
+
+    if (req.files?.images?.length) {
+  property.images = req.files.images.map(file => file.path);
+}
+
+if (req.files?.taxReceipt?.length) {
+  property.taxReceipt = req.files.taxReceipt[0].path;
+}
+
+if (req.files?.aadhaarPan?.length) {
+  property.aadhaarPan = req.files.aadhaarPan[0].path;
+}
+
+if (req.files?.electricityBill?.length) {
+  property.electricityBill = req.files.electricityBill[0].path;
+}
 
     await property.save();
 
@@ -572,7 +590,31 @@ const getOwnerStats = async (req, res) => {
     });
   }
 };
+const hideProperty = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
 
+    console.log("ID:", property._id);
+    console.log("Title:", property.title);
+    console.log("Rental Status:", property.rentalStatus);
+
+    property.isHidden = true;
+
+    await property.save();
+
+    res.json({
+      success: true,
+      property
+    });
+
+  } catch (error) {
+    console.log("HIDE ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 const unhideProperty = async (req, res) => {
   console.log("UNHIDE API CALLED");
   console.log("Property ID:", req.params.id);
@@ -614,5 +656,6 @@ module.exports = {
   getAvailableProperties,
   searchProperties,
   getOwnerStats,
+  hideProperty,
   unhideProperty
 };

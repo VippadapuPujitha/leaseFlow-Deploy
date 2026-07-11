@@ -21,6 +21,8 @@ import Profile from './pages/Profile';
 import SavedProperties from "./pages/SavedProperties";
 import Properties from "./pages/Properties";
 import { useAuth } from './hooks/useAuth';
+import OwnerPropertyDetail from "./pages/OwnerPropertyDetail";
+
 
 function App() {
   const { user } = useAuth();
@@ -83,6 +85,10 @@ user?.role === "tenant"
       </ProtectedRoute>
     }
   />
+  <Route
+  path="/owner-property/:id"
+  element={<OwnerPropertyDetail />}
+/>
 
   <Route
     path="/admin-dashboard"
