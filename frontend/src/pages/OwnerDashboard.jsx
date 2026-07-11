@@ -517,8 +517,22 @@ const hiddenProperties = properties.filter(
 );
 
 const filteredRequests = requests.filter((r) => {
-  if (requestFilter === "all") return true;
-  return r.status === requestFilter;
+  switch (requestFilter) {
+    case "pending":
+      return r.status === "pending";
+
+    case "accepted":
+      return r.status === "accepted";
+
+    case "rejected":
+      return r.status === "rejected";
+
+    case "cancelled":
+      return r.status === "cancelled";
+
+    default:
+      return true; // All
+  }
 });
 
   return (
@@ -1473,10 +1487,24 @@ const filteredRequests = requests.filter((r) => {
   </button>
 
   <button
+    className={`filter-btn ${requestFilter === "pending" ? "active" : ""}`}
+    onClick={() => setRequestFilter("pending")}
+  >
+    Pending
+  </button>
+
+  <button
     className={`filter-btn ${requestFilter === "accepted" ? "active" : ""}`}
     onClick={() => setRequestFilter("accepted")}
   >
     Accepted
+  </button>
+
+  <button
+    className={`filter-btn ${requestFilter === "rejected" ? "active" : ""}`}
+    onClick={() => setRequestFilter("rejected")}
+  >
+    Rejected
   </button>
 
   <button
@@ -1487,7 +1515,8 @@ const filteredRequests = requests.filter((r) => {
   </button>
 </div>
     <div className="request-grid">
-      {filteredRequests.map((r) => (
+      {filteredRequests.length > 0 ? (
+  filteredRequests.map((r) => (
         <div key={r._id} className="request-card">
           <div className="request-header">
 
@@ -1552,7 +1581,34 @@ const filteredRequests = requests.filter((r) => {
 
 </div>   // closes request-card
 
-))}      {/* closes requests.map*/}
+))
+) : (
+  <div
+    style={{
+      width: "100%",
+      textAlign: "center",
+      padding: "50px",
+      fontSize: "20px",
+      fontWeight: "600",
+      color: "#64748b",
+    }}
+  >
+    {requestFilter === "all" &&
+      "No requests found."}
+
+    {requestFilter === "pending" &&
+      "No pending requests."}
+
+    {requestFilter === "accepted" &&
+      "No accepted requests."}
+
+    {requestFilter === "rejected" &&
+      "No rejected requests."}
+
+    {requestFilter === "cancelled" &&
+      "No cancelled requests."}
+  </div>
+)}      {/* closes requests.map*/}
 
 </div>  { /* closes request-grid*/}
 
