@@ -168,7 +168,13 @@ console.log("FORM:", form);
 
       setForm(initialForm);
       setFiles({ images: [], ownershipDoc: null, taxDoc: null, idProof: null });
-      setSuccessMessage('Property added successfully!');
+      Swal.fire({
+  icon: "success",
+  title: "Added!",
+  text: "Property added successfully.",
+  timer: 2000,
+  showConfirmButton: false
+});
     } catch (err) {
   console.log("ERROR:", err);
   console.log("RESPONSE:", err.response?.data);
@@ -263,7 +269,13 @@ if (files.idProof) {
     const res = await api.get("/api/requests/owner");
     setRequests(res.data.requests);
 
-    setRequestMessage("Request accepted successfully!");
+    Swal.fire({
+  icon: "success",
+  title: "Request Sent!",
+  text: "Verification request submitted successfully.",
+  timer: 2000,
+  showConfirmButton: false
+});
     setTimeout(() => {
       setDeleteMessage("");
     }, 3000);
@@ -349,7 +361,13 @@ const handleUnhideProperty = async (id) => {
   )
 );
 
-    setRequestMessage("❌ Request rejected successfully");
+    Swal.fire({
+  icon: "success",
+  title: "Rejected!",
+  text: "Property rejected successfully.",
+  timer: 2000,
+  showConfirmButton: false
+});
 
     setTimeout(() => {
       setRequestMessage("");
@@ -370,13 +388,21 @@ const handleUnhideProperty = async (id) => {
 console.log("FINALIZE RESPONSE:", res.data);
 
     if (decision === "success") {
-      setDealMessage(
-  "Deal completed successfully. Property has been marked as hidden."
-);
+      Swal.fire({
+  icon: "success",
+  title: "Deal Completed!",
+  text: "Property has been marked as occupied and hidden successfully.",
+  timer: 2000,
+  showConfirmButton: false
+});
     } else {
-      setDealMessage(
-        "Deal cancelled successfully."
-      );
+      Swal.fire({
+  icon: "info",
+  title: "Cancelled",
+  text: "Deal has been cancelled.",
+  timer: 2000,
+  showConfirmButton: false
+});
     }
 
    setRequests(prev =>

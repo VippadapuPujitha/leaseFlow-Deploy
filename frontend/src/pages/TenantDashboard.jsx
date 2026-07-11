@@ -202,18 +202,14 @@ console.log(
     setRequests((prev) => [...prev, request]);
 
     // Show success message
-    setRequestMessage("✅ Property request sent successfully.");
+    Swal.fire({
+  icon: "success",
+  title: "Request Sent!",
+  text: "Property request sent successfully.",
+  timer: 2000,
+  showConfirmButton: false
+});
 
-    // Scroll to top
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-
-    // Hide message after 3 seconds
-    setTimeout(() => {
-      setRequestMessage("");
-    }, 3000);
 
   } catch (err) {
     console.log(err.response?.data);
@@ -261,9 +257,13 @@ console.log(
     });
 
     setProfileError("");
-    setProfileMessage(
-      "Profile updated successfully."
-    );
+    Swal.fire({
+  icon: "success",
+  title: "Profile Updated!",
+  text: "Your profile has been updated successfully.",
+  timer: 2000,
+  showConfirmButton: false
+});
     setEditingProfile(false);
   } catch (error) {
     setProfileError(
