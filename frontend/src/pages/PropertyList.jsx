@@ -77,6 +77,7 @@ function PropertyList() {
           </div>
         ) : (
           properties.map((property) => {
+            console.log(property);
             const id = property._id || property.id;
 
             const title =
@@ -90,13 +91,13 @@ function PropertyList() {
               "Unknown Location";
 
             const price = property.price
-              ? `$${property.price}`
-              : property.rent
-              ? `$${property.rent}/mo`
-              : "Contact";
+  ? `₹${property.price}`
+  : property.rent
+  ? `₹${property.rent}/mo`
+  : "Contact";
 
-            const badge =
-              property.status || "Available";
+            const image =
+  property.images?.[0] || property.image || "";
 
             return (
               <div
@@ -104,21 +105,26 @@ function PropertyList() {
                 key={id}
               >
                 <div className="property-card__media">
-                  {property.image ? (
-                    <img
-                      src={property.image}
-                      alt={title}
-                      className="img-fluid"
-                    />
-                  ) : (
-                    <div>
-                      {title
-                        .split(" ")
-                        .slice(0, 2)
-                        .join(" ")}
-                    </div>
-                  )}
-                </div>
+  {property.images && property.images.length > 0 ? (
+    <img
+      src={property.images[0]}
+      alt={title}
+      className="img-fluid"
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+      }}
+    />
+  ) : (
+    <div>
+      {title
+        .split(" ")
+        .slice(0, 2)
+        .join(" ")}
+    </div>
+  )}
+</div>
 
                 <div className="property-card__body">
                   <div className="d-flex justify-content-between align-items-start gap-2">

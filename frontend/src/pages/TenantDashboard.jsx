@@ -153,6 +153,13 @@ const matchesLocation =
     });
   }, [properties, search, location, propertyType, rentMin, rentMax]);
 
+console.log(
+  requests.map((r) => ({
+    property: r.property?.title,
+    status: r.status,
+  }))
+);
+
   const summary = useMemo(() => ({
   totalProperties: properties.length,
   appliedRequests: requests.length,
@@ -185,16 +192,9 @@ const matchesLocation =
 
     const request = response.data.request || response.data;
 
-    setRequests((prev) => [
-      ...prev,
-      {
-        id: request._id || request.id || `REQ-${prev.length + 100}`,
-        propertyName: property.title || property.name || "Property",
-        ownerName: property.ownerName || property.owner || "Owner",
-        date: new Date().toISOString().split("T")[0],
-        status: "Pending",
-      },
-    ]);
+    console.log("NEW REQUEST:", request);
+
+    setRequests((prev) => [...prev, request]);
 
     // Show success message
     setRequestMessage("✅ Property request sent successfully.");
@@ -450,24 +450,32 @@ const matchesLocation =
 
             const status = property.status || "Available";
 
-            return (
-              <article
-                key={property._id || property.id || title}
-                className="property-card"
-              >
+const image =
+  property.images?.[0] || property.image || "";
+
+return (
+  <article
+    key={property._id || property.id || title}
+    className="property-card"
+  >
                 <div className="property-card__media">
-                  {property.image ? (
-                    <img
-                      src={property.image}
-                      alt={title}
-                      className="img-fluid"
-                    />
-                  ) : (
-                    <div>
-                      {title.split(" ").slice(0, 2).join(" ")}
-                    </div>
-                  )}
-                </div>
+  {image ? (
+    <img
+      src={image}
+      alt={title}
+      className="img-fluid"
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+      }}
+    />
+  ) : (
+    <div>
+      {title.split(" ").slice(0, 2).join(" ")}
+    </div>
+  )}
+</div>
 
                 <div className="property-card__body">
                   <div className="d-flex justify-content-between align-items-start gap-2">
@@ -613,15 +621,21 @@ const matchesLocation =
             </td>
 
             <td
-              className="text-center"
-              style={{ whiteSpace: "nowrap" }}
-            >
-              {request.owner?.phone || (
-                <span className="text-muted">
-                  Not Available
-                </span>
-              )}
-            </td>
+  className="text-center"
+  style={{ whiteSpace: "nowrap" }}
+>
+  {request.status === "accepted" ? (
+    request.owner?.phone || (
+      <span className="text-muted">
+        Not Available
+      </span>
+    )
+  ) : (
+    <span className="text-muted">
+      Not Available
+    </span>
+  )}
+</td>
 
             <td className="text-center">
               {new Date(
@@ -697,12 +711,23 @@ const matchesLocation =
   <strong>Owner:</strong> {rental.owner?.name}
 </p>
 
-<p>
-  <strong>Status:</strong>
-  <span className="status-pill status-pill--success ms-2">
-    Active
-  </span>
-</p>
+<div className="d-flex align-items-center justify-content-between mt-3">
+  <div className="d-flex align-items-center">
+    <strong className="me-2">Status:</strong>
+
+    <span className="status-pill status-pill--success">
+      Active
+    </span>
+  </div>
+
+  <Link
+    to={`/properties/${rental.property?._id}`}
+    state={{ from: "/my-rentals" }}
+    className="btn btn-outline-primary btn-sm"
+  >
+    View
+  </Link>
+</div>
                     </div>
                   </div>
                 ))

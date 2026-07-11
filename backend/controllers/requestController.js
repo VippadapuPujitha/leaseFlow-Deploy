@@ -31,10 +31,14 @@ exports.sendRentalRequest = async (req, res) => {
       contactShared: false,
     });
 
+    const populatedRequest = await Request.findById(request._id)
+  .populate("property")
+  .populate("owner", "name phone");
+
     return res.status(201).json({
-      success: true,
-      request,
-    });
+  success: true,
+  request: populatedRequest,
+});
   } catch (err) {
     return res.status(500).json({
       success: false,
