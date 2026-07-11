@@ -231,9 +231,13 @@ exports.finalizeDeal = async (req, res) => {
     }
 
     if (decision === "success") {
+      console.log("SUCCESS");
     request.status = "accepted";
     request.ownerAccepted = false;
     request.contactShared = true;
+
+    console.log(request.status);
+    console.log(request.contactShared);
 
     await Property.findByIdAndUpdate(request.property._id, {
     rentalStatus: "occupied",
@@ -242,8 +246,13 @@ exports.finalizeDeal = async (req, res) => {
 });
 
 } else {
-    request.status = "cancelled";
+  console.log("CANCEL");
+    request.status = "rejected";
     request.ownerAccepted = false;
+    request.contactShared = false;
+
+     console.log(request.status);
+    console.log(request.contactShared);
 
     await Property.findByIdAndUpdate(request.property._id, {
         rentalStatus: "available",

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
 import SavedProperties from './SavedProperties';
@@ -21,7 +21,10 @@ const statusLabels = {
 
 function TenantDashboard() {
   const { user } = useAuth();
-  const [activeSection, setActiveSection] = useState('dashboard');
+const routerLocation = useLocation();
+const [activeSection, setActiveSection] = useState(
+  sessionStorage.getItem("tenantActiveSection") || "dashboard"
+);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -281,7 +284,10 @@ console.log(
               key={item.id}
               type="button"
               className={`dashboard-link ${activeSection === item.id ? 'active' : ''}`}
-              onClick={() => setActiveSection(item.id)}
+              onClick={() => {
+  sessionStorage.setItem("tenantActiveSection", item.id);
+  setActiveSection(item.id);
+}}
             >
               <span>{item.icon}</span>
               {item.label}
@@ -520,7 +526,7 @@ return (
                     <Link
   className="btn btn-outline-primary btn-sm flex-fill"
   to={`/properties/${property._id || property.id}`}
-  state={{ from: "/browse-properties" }}
+  state={{ from: "/tenant-dashboard" }}
 >
   View
 </Link>
@@ -624,7 +630,7 @@ return (
   className="text-center"
   style={{ whiteSpace: "nowrap" }}
 >
-  {request.status === "accepted" ? (
+  {request.contactShared ? (
     request.owner?.phone || (
       <span className="text-muted">
         Not Available
@@ -653,9 +659,10 @@ return (
                 }}
               >
                 <span>
-                  {statusLabels[request.status] ||
-                    request.status}
-                </span>
+  {request.status === "cancelled"
+    ? "🔴 Rejected"
+    : statusLabels[request.status] || request.status}
+</span>
 
                 {request.status === "pending" && (
                   <button

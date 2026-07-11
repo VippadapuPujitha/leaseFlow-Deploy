@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
+import { useLocation } from "react-router-dom";
 
 function PropertyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -230,11 +232,14 @@ const prevImage = () => {
     </button>
 
     <button
-      className="btn btn-secondary"
-      onClick={() => navigate("/tenant-dashboard")}
-    >
-      Back to Browse Properties
-    </button>
+  className="btn btn-secondary"
+  onClick={() => {
+    sessionStorage.setItem("tenantActiveSection", "browse");
+    navigate("/tenant-dashboard");
+  }}
+>
+  Back to Browse Properties
+</button>
 
   </div>
 
