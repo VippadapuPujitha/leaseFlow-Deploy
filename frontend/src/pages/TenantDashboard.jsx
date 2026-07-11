@@ -107,7 +107,7 @@ const handleWithdraw = async (requestId) => {
     setLoading(true);
 
     try {
-      const response = await api.get('/api/properties');
+      const response = await api.get('/api/properties/available');
       const data = response.data;
       console.log("API RESPONSE:", data.properties);
       setProperties(data.properties || data || []);
@@ -141,6 +141,7 @@ const matchesLocation =
       const type = (property.propertyType || property.type || '').toLowerCase();
       const rent = Number(property.rent || property.monthlyRent || 0);
       const isLocked = property.status === "LOCKED";
+      const isHidden = property.isHidden;
       const searchText = search.toLowerCase();
       const matchesSearch = title.includes(searchText) || address.includes(searchText) || property._id?.includes(searchText) || property.id?.includes(searchText);
       
@@ -148,11 +149,12 @@ const matchesLocation =
       const matchesMin = !rentMin || rent >= Number(rentMin);
       const matchesMax = !rentMax || rent <= Number(rentMax);
       return !isLocked &&
-       matchesSearch &&
-       matchesLocation &&
-       matchesType &&
-       matchesMin &&
-       matchesMax;
+  !isHidden &&
+  matchesSearch &&
+  matchesLocation &&
+  matchesType &&
+  matchesMin &&
+  matchesMax;
     });
   }, [properties, search, location, propertyType, rentMin, rentMax]);
 

@@ -405,6 +405,10 @@ console.log("FINALIZE RESPONSE:", res.data);
     const propRes = await api.get(
   `/api/properties/owner/${user.id}`
 );
+await request.save();
+
+console.log("Saved request status:", request.status);
+console.log("Saved request:", request);
 
 console.log(propRes.data.properties);
 
@@ -419,6 +423,50 @@ setRequests(reqRes.data.requests || []);
   console.log("ERROR DATA:", err.response?.data);
   console.log("ERROR URL:", err.config?.url);
 }
+};
+const handleDelete = async (id) => {
+  try {
+    const result = await Swal.fire({
+      title: "Delete Property?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Delete",
+    });
+
+    if (!result.isConfirmed) return;
+
+    await api.delete(`/api/properties/${id}`);
+
+    setProperties((prev) => prev.filter((p) => p._id !== id));
+
+    setDeleteMessage("Property deleted successfully!");
+
+    Swal.fire({
+      icon: "success",
+      title: "Deleted!",
+      text: "Property deleted successfully.",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+
+    setTimeout(() => {
+      setDeleteMessage("");
+    }, 3000);
+
+  } catch (err) {
+    console.log(err);
+
+    Swal.fire({
+      icon: "error",
+      title: "Delete Failed",
+      text:
+        err.response?.data?.message ||
+        "Unable to delete property.",
+    });
+  }
 };
   // ---------------- STATS ----------------
   const summary = useMemo(() => ({
@@ -1210,7 +1258,7 @@ const filteredRequests = requests.filter((r) => {
   {(() => {
     const filteredProperties = properties.filter((p) => {
       if (filter === "available")
-        return p.rentalStatus === "available";
+  return p.rentalStatus === "available" && !p.isHidden;
 
       if (filter === "occupied")
         return (

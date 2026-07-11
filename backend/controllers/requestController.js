@@ -247,7 +247,7 @@ exports.finalizeDeal = async (req, res) => {
 
 } else {
   console.log("CANCEL");
-    request.status = "rejected";
+    request.status = "cancelled";
     request.ownerAccepted = false;
     request.contactShared = false;
 
@@ -260,7 +260,7 @@ exports.finalizeDeal = async (req, res) => {
 }
 
     await request.save();
-
+  console.log("Saved request:", request);
     return res.json({
       success: true,
       message: "Deal finalized successfully",
