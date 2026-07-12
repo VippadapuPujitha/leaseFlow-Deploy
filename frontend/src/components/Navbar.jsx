@@ -15,21 +15,7 @@ function Navbar() {
   const linkClass = ({ isActive }) =>
     isActive ? "nav-link active fw-bold text-primary" : "nav-link";
 
-  const renderTenantLinks = () => (
-    <>
-      <li className="nav-item">
-        <NavLink className={linkClass} to="/tenant-dashboard">
-          Dashboard
-        </NavLink>
-      </li>
-
-      <li className="nav-item">
-        <NavLink className={linkClass} to="/properties">
-          Properties
-        </NavLink>
-      </li>
-    </>
-  );
+const renderTenantLinks = () => null;
 
 const renderOwnerLinks = () => (
   <></>
