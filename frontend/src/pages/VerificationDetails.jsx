@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import AdminVerificationBadge from '../components/AdminVerificationBadge';
+import AdminSidebar from '../components/AdminSidebar';
 import {
   getAdminPropertyById,
   notifyAdminDataChanged,
@@ -160,6 +161,10 @@ function VerificationDetails() {
   const ownershipDocumentUrl = resolvePublicUploadUrl(
     property.ownershipDocumentUrl || property.ownershipDocument || property.electricityBill
   , 'document');
+  const ownerIdDocumentUrl = resolvePublicUploadUrl(
+    property.aadhaarPan || property.ownerId?.aadhaarPan || property.ownerDetails?.aadhaarPan,
+    'document'
+  );
   const status = normalizeStatus(property.verificationStatus);
   const statusLabel = status === 'verified' ? 'Verified' : status === 'rejected' ? 'Rejected' : 'Pending';
 
@@ -169,8 +174,10 @@ function VerificationDetails() {
   };
 
   return (
-    <div className="admin-shell">
-      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
+    <div className="dashboard-layout">
+      <AdminSidebar />
+      <main className="dashboard-main">
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
         <div>
           <p className="admin-eyebrow mb-2">Admin Module</p>
           <h1 className="page-title mb-2">Verification Details</h1>
@@ -249,13 +256,9 @@ function VerificationDetails() {
                 {imageUrls.length ? (
                   imageUrls.map((url) => (
                     <div key={url} className="verification-image-card">
-                      <button
-                        type="button"
-                        className="border-0 bg-transparent p-0 w-100 text-start"
-                        onClick={() => openImagePreview(url, property.title)}
-                      >
+                      <a href={url} target="_blank" rel="noreferrer" className="d-block">
                         <img src={url} alt={property.title} className="img-fluid" />
-                      </button>
+                      </a>
                     </div>
                   ))
                 ) : (
@@ -273,19 +276,16 @@ function VerificationDetails() {
               <strong className="d-block mb-2">Tax Document</strong>
               {taxDocumentUrl ? (
                 <div className="mb-2">
-                  {isImageUrl(taxDocumentUrl) ? (
-                    <img src={taxDocumentUrl} alt="Tax document" className="img-fluid rounded-4" />
-                  ) : (
-                    <iframe src={taxDocumentUrl} title="Tax document" className="verification-document-frame" />
-                  )}
+                  <a href={taxDocumentUrl} target="_blank" rel="noreferrer" className="d-block">
+                    {isImageUrl(taxDocumentUrl) ? (
+                      <img src={taxDocumentUrl} alt="Tax document" className="img-fluid rounded-4" />
+                    ) : (
+                      <iframe src={taxDocumentUrl} title="Tax document" className="verification-document-frame" />
+                    )}
+                  </a>
                 </div>
               ) : (
                 <p className="text-muted mb-2">No tax document uploaded.</p>
-              )}
-              {taxDocumentUrl && (
-                <a href={taxDocumentUrl} target="_blank" rel="noreferrer" className="btn btn-outline-primary btn-sm">
-                  View Tax Document
-                </a>
               )}
             </div>
 
@@ -293,19 +293,32 @@ function VerificationDetails() {
               <strong className="d-block mb-2">Ownership Document</strong>
               {ownershipDocumentUrl ? (
                 <div className="mb-2">
-                  {isImageUrl(ownershipDocumentUrl) ? (
-                    <img src={ownershipDocumentUrl} alt="Ownership document" className="img-fluid rounded-4" />
-                  ) : (
-                    <iframe src={ownershipDocumentUrl} title="Ownership document" className="verification-document-frame" />
-                  )}
+                  <a href={ownershipDocumentUrl} target="_blank" rel="noreferrer" className="d-block">
+                    {isImageUrl(ownershipDocumentUrl) ? (
+                      <img src={ownershipDocumentUrl} alt="Ownership document" className="img-fluid rounded-4" />
+                    ) : (
+                      <iframe src={ownershipDocumentUrl} title="Ownership document" className="verification-document-frame" />
+                    )}
+                  </a>
                 </div>
               ) : (
                 <p className="text-muted mb-2">No ownership document uploaded.</p>
               )}
-              {ownershipDocumentUrl && (
-                <a href={ownershipDocumentUrl} target="_blank" rel="noreferrer" className="btn btn-outline-primary btn-sm">
-                  View Ownership Document
-                </a>
+            </div>
+            <div className="mt-4">
+              <strong className="d-block mb-2">Owner ID</strong>
+              {ownerIdDocumentUrl ? (
+                <div className="mb-2">
+                  <a href={ownerIdDocumentUrl} target="_blank" rel="noreferrer" className="d-block">
+                    {isImageUrl(ownerIdDocumentUrl) ? (
+                      <img src={ownerIdDocumentUrl} alt="Owner ID document" className="img-fluid rounded-4" />
+                    ) : (
+                      <iframe src={ownerIdDocumentUrl} title="Owner ID document" className="verification-document-frame" />
+                    )}
+                  </a>
+                </div>
+              ) : (
+                <p className="text-muted mb-2">No owner ID uploaded.</p>
               )}
             </div>
           </div>
@@ -358,12 +371,13 @@ function VerificationDetails() {
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setPreviewImageUrl('')} />
               </div>
               <div className="modal-body text-center">
-                <img src={previewImageUrl} alt={previewImageLabel || 'Property preview'} className="img-fluid rounded-4" />
+                <img src={previewImageUrl} alt={previewImageLabel || 'Property preview'} className="img-fluid verification-preview-img rounded-4" />
               </div>
             </div>
           </div>
         </div>
       )}
+      </main>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   FiPlus,
   FiList,
   FiBell,
+  FiShield,
 } from "react-icons/fi";
 
 function OwnerSidebar() {
@@ -13,6 +14,7 @@ function OwnerSidebar() {
     { path: "/owner-dashboard", label: "Dashboard", icon: FiHome },
     { path: "/add-property", label: "Add Property", icon: FiPlus },
     { path: "/my-properties", label: "My Properties", icon: FiList },
+    { path: "/verification-status", label: "Verification Status", icon: FiShield },
     { path: "/tenant-requests", label: "Tenant Requests", icon: FiBell },
   ];
 

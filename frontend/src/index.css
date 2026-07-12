@@ -663,6 +663,13 @@ box-shadow:var(--shadow);
   background: #fff;
 }
 
+.verification-preview-img {
+  max-height: 70vh;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
 .property-card__meta span {
   font-weight: 700;
 }

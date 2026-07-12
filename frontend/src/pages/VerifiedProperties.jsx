@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import AdminSidebar from '../components/AdminSidebar';
 import AdminVerificationBadge from '../components/AdminVerificationBadge';
 import { getAdminProperties } from '../services/adminService';
 
@@ -38,8 +39,10 @@ function VerifiedProperties() {
   }, []);
 
   return (
-    <div className="admin-shell">
-      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
+    <div className="dashboard-layout">
+      <AdminSidebar />
+      <main className="dashboard-main">
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
         <div>
           <p className="admin-eyebrow mb-2">Admin Module</p>
           <h1 className="page-title mb-2">Verified Properties</h1>
@@ -101,6 +104,7 @@ function VerifiedProperties() {
           </table>
         </div>
       </div>
+      </main>
     </div>
   );
 }

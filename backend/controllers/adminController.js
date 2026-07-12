@@ -4,12 +4,19 @@ const Property = require("../models/Property");
 
 const OWNER_FIELDS = "name email phone role";
 
+const isRemoteUrl = (value) => /^(https?:)?\/\//i.test(value) || value.startsWith('data:');
+
 const buildPublicFileUrl = (req, filePath) => {
   if (!filePath) {
     return "";
   }
 
-  const filename = path.basename(filePath);
+  if (isRemoteUrl(filePath)) {
+    return filePath;
+  }
+
+  const normalizedPath = String(filePath).replace(/\\/g, "/");
+  const filename = path.basename(normalizedPath);
   const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename);
   const folder = isImage ? "images" : "documents";
 

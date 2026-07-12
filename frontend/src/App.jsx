@@ -22,6 +22,7 @@ import SavedProperties from "./pages/SavedProperties";
 import Properties from "./pages/Properties";
 import { useAuth } from './hooks/useAuth';
 import OwnerPropertyDetail from "./pages/OwnerPropertyDetail";
+import OwnerVerificationStatus from "./pages/OwnerVerificationStatus";
 
 
 function App() {
@@ -86,9 +87,17 @@ user?.role === "tenant"
     }
   />
   <Route
-  path="/owner-property/:id"
-  element={<OwnerPropertyDetail />}
-/>
+    path="/verification-status"
+    element={
+      <ProtectedRoute roles={['owner']}>
+        <OwnerVerificationStatus />
+      </ProtectedRoute>
+    }
+  />
+  <Route
+    path="/owner-property/:id"
+    element={<OwnerPropertyDetail />}
+  />
 
   <Route
     path="/admin-dashboard"
