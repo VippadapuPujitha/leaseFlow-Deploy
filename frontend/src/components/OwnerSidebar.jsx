@@ -6,6 +6,7 @@ import {
   FiList,
   FiBell,
   FiShield,
+  FiUser,
 } from "react-icons/fi";
 
 function OwnerSidebar() {
@@ -16,6 +17,7 @@ function OwnerSidebar() {
     { path: "/my-properties", label: "My Properties", icon: FiList },
     { path: "/verification-status", label: "Verification Status", icon: FiShield },
     { path: "/tenant-requests", label: "Tenant Requests", icon: FiBell },
+     { path: "/owner-profile", label: "Profile", icon: FiUser },
   ];
 
   const linkClass = ({ isActive }) =>

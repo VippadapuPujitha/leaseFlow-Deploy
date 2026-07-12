@@ -23,7 +23,7 @@ import Properties from "./pages/Properties";
 import { useAuth } from './hooks/useAuth';
 import OwnerPropertyDetail from "./pages/OwnerPropertyDetail";
 import OwnerVerificationStatus from "./pages/OwnerVerificationStatus";
-
+import OwnerProfile from "./pages/OwnerProfile";
 
 function App() {
   const { user } = useAuth();
@@ -109,6 +109,8 @@ user?.role === "tenant"
   />
 
   {/* OWNER ROUTES (IMPORTANT FIX) */}
+<Route path="/owner-profile" element={<OwnerProfile />} />
+  <Route path="/owner-profile" element={<Profile />} />
   <Route
     path="/add-property"
     element={

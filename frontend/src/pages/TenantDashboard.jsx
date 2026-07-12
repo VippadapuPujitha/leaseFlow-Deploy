@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
 import SavedProperties from './SavedProperties';
+import Swal from "sweetalert2";
 
 const tenantNavigation = [
   { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
@@ -238,10 +239,10 @@ console.log(
   const handleSaveProfile = async (event) => {
   event.preventDefault();
 
-  if (!profileForm.name || !profileForm.email) {
-    setProfileError("Name and email are required.");
-    return;
-  }
+if (!profileForm.name) {
+  setProfileError("Name is required.");
+  return;
+}
 
   if (!/^\d{10}$/.test(profileForm.phone)) {
     setProfileError(
@@ -255,7 +256,7 @@ console.log(
       name: profileForm.name,
       phone: profileForm.phone,
     });
-
+    await fetchProfile();
     setProfileError("");
     Swal.fire({
   icon: "success",
@@ -266,11 +267,16 @@ console.log(
 });
     setEditingProfile(false);
   } catch (error) {
-    setProfileError(
-      error.response?.data?.message ||
-      "Failed to update profile"
-    );
-  }
+  console.log("TenantDashboard Error:", error);
+  console.log("Response:", error.response);
+  console.log("Data:", error.response?.data);
+
+  setProfileError(
+    error.response?.data?.message ||
+    error.message ||
+    "Failed to update profile"
+  );
+}
 };
 
   return (
@@ -771,10 +777,7 @@ return (
                     <label className="form-label">Name</label>
                     <input className="form-control" value={profileForm.name} onChange={(e) => handleProfileChange('name', e.target.value)} required />
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Email</label>
-                    <input type="email" className="form-control" value={profileForm.email} onChange={(e) => handleProfileChange('email', e.target.value)} required />
-                  </div>
+                  
                   <div className="col-md-6">
                     <label className="form-label">Phone number</label>
                   </div>

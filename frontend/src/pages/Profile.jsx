@@ -69,12 +69,17 @@ function Profile() {
       setUser(response.data.user);
 
       setMessage("Profile updated successfully");
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to update profile"
-      );
-    } finally {
+    } catch (error) {
+  console.log("TenantDashboard Error:", error);
+  console.log("Response:", error.response);
+  console.log("Data:", error.response?.data);
+
+  setProfileError(
+    error.response?.data?.message ||
+    error.message ||
+    "Failed to update profile"
+  );
+} finally {
       setSaving(false);
     }
   };
@@ -121,76 +126,50 @@ function Profile() {
             </div>
           )}
 
-          <form onSubmit={handleUpdate}>
-            <div className="mb-3">
-              <label className="form-label">
-                Name
-              </label>
-              <input
-                type="text"
-                className="profile-input"
-                value={name}
-                onChange={(e) =>
-                  setName(e.target.value)
-                }
-                required
-              />
-            </div>
+         <form onSubmit={handleUpdate}>
+  <div className="mb-3">
+    <label className="form-label">Name</label>
+    <input
+      type="text"
+      className="profile-input"
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      required
+    />
+  </div>
 
-            <div className="mb-3">
-              <label className="form-label">
-                Email
-              </label>
-              <input
-                type="email"
-                className="profile-input"
-                value={user?.email || ""}
-                disabled
-              />
-            </div>
+  <div className="mb-3">
+    <label className="form-label">Phone Number</label>
+    <input
+      type="tel"
+      className="profile-input"
+      value={phone}
+      onChange={(e) => setPhone(e.target.value)}
+    />
+  </div>
 
-            <div className="mb-3">
-              <label className="form-label">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                className="profile-input"
-                value={phone}
-                onChange={(e) =>
-                  setPhone(e.target.value)
-                }
-              />
-            </div>
+  <div className="mb-3">
+    <label className="form-label">Role</label>
+    <input
+      type="text"
+      className="profile-input"
+      value={
+        user?.role
+          ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+          : ""
+      }
+      disabled
+    />
+  </div>
 
-            <div className="mb-3">
-                <label className="form-label">
-                    Role
-                </label>
-
-                <input
-                    type="text"
-                    className="profile-input"
-                    value={
-                    user?.role
-                        ? user.role.charAt(0).toUpperCase() +
-                        user.role.slice(1)
-                        : ""
-                    }
-                    disabled
-                />
-            </div>
-
-            <button
-              type="submit"
-              className="save-btn"
-              disabled={saving}
-            >
-              {saving
-                ? "Updating..."
-                : "Update Profile"}
-            </button>
-          </form>
+  <button
+    type="submit"
+    className="save-btn"
+    disabled={saving}
+  >
+    {saving ? "Updating..." : "Update Profile"}
+  </button>
+</form>
         </div>
       </div>
     </div>
