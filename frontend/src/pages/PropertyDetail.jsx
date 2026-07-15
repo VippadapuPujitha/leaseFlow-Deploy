@@ -72,10 +72,15 @@ const prevImage = () => {
     prev === 0 ? property.images.length - 1 : prev - 1
   );
 };
+
+console.log(property);
   return (
     <div className="mb-4">
 
       <div className="page-title mb-1">{title}</div>
+      <div className="text-muted mb-2">
+  <strong>Property ID:</strong> {property.propertyId}
+</div>
       <div className="d-flex justify-content-between align-items-center flex-wrap mb-4">
   <p className="page-subtitle mb-0">{subtitle}</p>
 
@@ -109,11 +114,19 @@ const prevImage = () => {
     &#10094;
   </button>
 
+  <div className="image-wrapper">
+
   <img
     src={property.images[selectedImage]}
     alt={title}
     className="property-image-main"
   />
+
+  <div className="property-watermark">
+    Property ID: {property.propertyId}
+  </div>
+
+</div>
 
   <button
     type="button"

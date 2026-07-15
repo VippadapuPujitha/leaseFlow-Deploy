@@ -76,6 +76,10 @@ const propertySchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    propertyId: {
+  type: String,
+  unique: true,
+},
     verificationStatus: {
       type: String,
       enum: ["not_requested", "pending", "verified", "rejected"],

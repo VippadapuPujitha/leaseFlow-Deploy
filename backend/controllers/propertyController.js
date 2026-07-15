@@ -10,6 +10,9 @@ const createProperty = async (req, res) => {
     console.log("RENT RECEIVED:", req.body.rent);
     const images = req.files?.images?.map(file => file.path) || [];
 
+    const propertyCount = await Property.countDocuments();
+
+const propertyId = `LF${1001 + propertyCount}`;
     const property = await Property.create({
   title: req.body.title,
   address: req.body.address,
@@ -35,7 +38,7 @@ bathrooms: req.body.bathrooms,
   ownershipDocument: req.files?.ownershipDocument?.[0]?.path || "",
 
   ownerId: req.user.id,
-
+propertyId,
   verificationStatus: "not_requested",
   rentalStatus: "available",
   isHidden: false
