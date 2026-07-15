@@ -19,7 +19,7 @@ const requestSchema = new mongoose.Schema(
 },
     status: {
       type: String,
-      enum: ["pending", "accepted", "rejected","cancelled","withdrawn"],
+      enum: ["pending", "accepted", "rejected","cancelled","withdrawn","expired"],
       default: "pending",
     },
     owner: {

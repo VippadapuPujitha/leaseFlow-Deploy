@@ -18,6 +18,7 @@ const statusLabels = {
   pending: '🟡 Pending',
   accepted: '🟢 Approved',
   rejected: '🔴 Rejected',
+   expired: "⏰ Expired",
 };
 
 function TenantDashboard() {
@@ -79,13 +80,32 @@ const fetchMyRequests = async () => {
   try {
     const response = await api.get("/api/requests/my-requests");
 
-    console.log("MY REQUESTS:", response.data);
 
     setRequests(response.data.requests || []);
-    const acceptedRentals = (response.data.requests || [])
-  .filter((request) => request.status === "accepted");
 
-setRentals(acceptedRentals);
+    const acceptedRentals = (response.data.requests || []).filter(
+      (request) => request.status === "accepted"
+    );
+
+    setRentals(acceptedRentals);
+
+    // Check for expired requests
+    const expiredRequest = response.data.requests.find(
+      (req) => req.status === "expired"
+    );
+
+    console.log("Expired Request:", expiredRequest);
+
+    if (expiredRequest) {
+      Swal.fire({
+        icon: "info",
+        title: "Request Expired",
+        text: "Your rental request expired after 48 hours because the owner did not respond.",
+        timer: 3000,
+        showConfirmButton: false,
+      });
+    }
+
   } catch (error) {
     console.log(error);
   }
@@ -126,6 +146,7 @@ const handleWithdraw = async (requestId) => {
   fetchMyRequests();
 
 }, []);
+
 
   const filteredProperties = useMemo(() => {
     return properties.filter((property) => {

@@ -71,6 +71,19 @@ useEffect(() => {
     fetchProperties();
   }
 }, [user]);
+useEffect(() => {
+  const expired = requests.find(req => req.status === "expired");
+
+  if (expired) {
+    Swal.fire({
+      icon: "info",
+      title: "Request Expired",
+      text: "A tenant's rental request expired after 48 hours.",
+      timer: 2500,
+      showConfirmButton: false
+    });
+  }
+}, [requests]);
 
   // ---------------- FETCH REQUESTS ----------------
   useEffect(() => {
@@ -1528,6 +1541,12 @@ return filteredProperties.map((p) => {
   >
     Cancelled
   </button>
+  <button
+  className={`filter-btn ${requestFilter === "expired" ? "active" : ""}`}
+  onClick={() => setRequestFilter("expired")}
+>
+  Expired
+</button>
 </div>
     <div className="request-grid">
       {filteredRequests.length > 0 ? (
@@ -1622,6 +1641,8 @@ return filteredProperties.map((p) => {
 
     {requestFilter === "cancelled" &&
       "No cancelled requests."}
+      {requestFilter === "expired" &&
+      "No expired requests."}
   </div>
 )}      {/* closes requests.map*/}
 
