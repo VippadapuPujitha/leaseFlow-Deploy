@@ -1342,112 +1342,127 @@ const filteredRequests = requests.filter((r) => {
       );
     }
 
-    return filteredProperties.map((p) => (
-      <div key={p._id} className="property-card">
-        <div className="property-header">
-          <div>
-            <h3>{p.title}</h3>
-            <p className="property-city">📍 {p.city}</p>
-          </div>
 
-          <span className={`status ${p.rentalStatus}`}>
-            {p.rentalStatus}
-          </span>
+return filteredProperties.map((p) => {
+  const image = p.images?.[0] || p.image || "";
+
+  return (
+    <div key={p._id} className="property-card">
+
+      {image && (
+        <div className="property-card__media">
+          <img
+            src={image}
+            alt={p.title}
+            style={{
+              width: "100%",
+              height: "220px",
+              objectFit: "cover",
+            }}
+          />
+        </div>
+      )}
+
+      <div className="property-header">
+        <div>
+          <h3>{p.title}</h3>
+          <p className="property-city">📍 {p.city}</p>
         </div>
 
-        <div className="property-info">
-          <div>
-            <small>Monthly Rent</small>
-            <h2>₹{p.rent}</h2>
-          </div>
-
-          <div>
-            <small>Bedrooms</small>
-            <h4>{p.bedrooms}</h4>
-          </div>
-
-          <div>
-            <small>Bathrooms</small>
-            <h4>{p.bathrooms}</h4>
-          </div>
-        </div>
-
-        <div className="property-actions">
-
-  <button
-    onClick={() => navigate(`/owner-property/${p._id}`)}
-    className="view-btn"
-  >
-    View
-  </button>
-
-  <button
-    onClick={() => {
-      console.log("Rent from DB:", p.rent);
-
-      setSelectedProperty(p);
-      setIsEditMode(true);
-
-      setFiles({
-        images: [],
-        ownershipDoc: null,
-        taxDoc: null,
-        idProof: null
-      });
-
-      setForm({
-        title: p.title || "",
-        propertyType: p.propertyType || "Apartment",
-        address: p.address || "",
-        city: p.city || "",
-        rent: p.rent || "",
-        description: p.description || "",
-        latitude: p.latitude || "",
-        longitude: p.longitude || "",
-        bedrooms: p.bedrooms || "",
-        bathrooms: p.bathrooms || "",
-        squareFeet: p.squareFeet || "",
-        availableFrom: p.availableFrom
-          ? p.availableFrom.split("T")[0]
-          : "",
-      });
-    }}
-    className="edit-btn"
-  >
-    Edit
-  </button>
-
-
-  {p.isHidden ? (
-    <button
-      onClick={() => handleUnhideProperty(p._id)}
-      className="unhide-btn"
-    >
-      Unhide
-    </button>
-  ) : (
-    <button
-      onClick={() => handleHideProperty(p._id)}
-      className="hide-btn"
-    >
-      Hide
-    </button>
-  )}
-
-
-  <button
-    onClick={() => handleDelete(p._id)}
-    className="delete-btn"
-  >
-    Delete
-  </button>
-
-</div>
+        <span className={`status ${p.rentalStatus}`}>
+          {p.rentalStatus}
+        </span>
       </div>
-            ));
-      })()}
+
+      <div className="property-info">
+        <div>
+          <small>Monthly Rent</small>
+          <h2>₹{p.rent}</h2>
+        </div>
+
+        <div>
+          <small>Bedrooms</small>
+          <h4>{p.bedrooms}</h4>
+        </div>
+
+        <div>
+          <small>Bathrooms</small>
+          <h4>{p.bathrooms}</h4>
+        </div>
+      </div>
+
+      <div className="property-actions">
+        <button
+          onClick={() => navigate(`/owner-property/${p._id}`)}
+          className="view-btn"
+        >
+          View
+        </button>
+
+        <button
+          onClick={() => {
+            setSelectedProperty(p);
+            setIsEditMode(true);
+
+            setFiles({
+              images: [],
+              ownershipDoc: null,
+              taxDoc: null,
+              idProof: null,
+            });
+
+            setForm({
+              title: p.title || "",
+              propertyType: p.propertyType || "Apartment",
+              address: p.address || "",
+              city: p.city || "",
+              rent: p.rent || "",
+              description: p.description || "",
+              latitude: p.latitude || "",
+              longitude: p.longitude || "",
+              bedrooms: p.bedrooms || "",
+              bathrooms: p.bathrooms || "",
+              squareFeet: p.squareFeet || "",
+              availableFrom: p.availableFrom
+                ? p.availableFrom.split("T")[0]
+                : "",
+            });
+          }}
+          className="edit-btn"
+        >
+          Edit
+        </button>
+
+        {p.isHidden ? (
+          <button
+            onClick={() => handleUnhideProperty(p._id)}
+            className="unhide-btn"
+          >
+            Unhide
+          </button>
+        ) : (
+          <button
+            onClick={() => handleHideProperty(p._id)}
+            className="hide-btn"
+          >
+            Hide
+          </button>
+        )}
+
+        <button
+          onClick={() => handleDelete(p._id)}
+          className="delete-btn"
+        >
+          Delete
+        </button>
+      </div>
     </div>
-  </>
+  );
+});
+
+})()}
+</div>
+</>
 )}
 
 {path === "/tenant-requests" && (
