@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import AdminVerificationBadge from '../components/AdminVerificationBadge';
 import AdminSidebar from '../components/AdminSidebar';
+import VerifiedStamp from '../components/VerifiedStamp';
 import {
   getAdminPropertyById,
   notifyAdminDataChanged,
@@ -202,12 +203,6 @@ function VerificationDetails() {
             <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
               <div>
                 <h2 className="h4 mb-2">{property.title}</h2>
-                {status === 'verified' && (
-                  <div className="verified-stamp verified-stamp--inline" aria-hidden>
-                    <span className="check">✓</span>
-                    VERIFIED
-                  </div>
-                )}
                 <AdminVerificationBadge verificationStatus={property.verificationStatus} />
                 {status === 'verified' && <div className="text-success small mt-3">Verified status</div>}
                 {status === 'rejected' && (
@@ -254,10 +249,13 @@ function VerificationDetails() {
               </div>
               <div className="verification-image-grid">
                 {imageUrls.length ? (
-                  imageUrls.map((url) => (
+                  imageUrls.map((url, index) => (
                     <div key={url} className="verification-image-card">
-                      <a href={url} target="_blank" rel="noreferrer" className="d-block">
+                      <a href={url} target="_blank" rel="noreferrer" className="d-block position-relative">
                         <img src={url} alt={property.title} className="img-fluid" />
+                        {index === 0 && (
+                          <VerifiedStamp verificationStatus={property.verificationStatus} className="verified-stamp--overlay" />
+                        )}
                       </a>
                     </div>
                   ))

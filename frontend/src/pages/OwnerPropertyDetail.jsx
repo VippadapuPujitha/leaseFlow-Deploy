@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axiosConfig";
+import VerifiedStamp from "../components/VerifiedStamp";
 
 function OwnerPropertyDetail() {
   const { id } = useParams();
@@ -95,12 +96,15 @@ function OwnerPropertyDetail() {
               </button>
 
 
-              <img
-                src={property.images[selectedImage]}
-                className="property-image-main"
-                alt="property"
-              />
+              <div className="image-wrapper">
+                <img
+                  src={property.images[selectedImage]}
+                  className="property-image-main"
+                  alt="property"
+                />
 
+                <VerifiedStamp verificationStatus={property?.verificationStatus} className="verified-stamp--overlay" />
+              </div>
 
               <button
                 className="gallery-arrow right"

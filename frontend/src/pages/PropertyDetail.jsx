@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useLocation } from "react-router-dom";
+import VerifiedStamp from '../components/VerifiedStamp';
 
 function PropertyDetail() {
   const { id } = useParams();
@@ -79,8 +80,8 @@ console.log(property);
 
       <div className="page-title mb-1">{title}</div>
       <div className="text-muted mb-2">
-  <strong>Property ID:</strong> {property.propertyId}
-</div>
+        <strong>Property ID:</strong> {property.propertyId}
+      </div>
       <div className="d-flex justify-content-between align-items-center flex-wrap mb-4">
   <p className="page-subtitle mb-0">{subtitle}</p>
 
@@ -121,6 +122,8 @@ console.log(property);
     alt={title}
     className="property-image-main"
   />
+
+  <VerifiedStamp verificationStatus={property?.verificationStatus} className="verified-stamp--overlay" />
 
   <div className="property-watermark">
     Property ID: {property.propertyId}

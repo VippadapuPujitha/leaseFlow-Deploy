@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
+import VerifiedStamp from '../components/VerifiedStamp';
 import SavedProperties from './SavedProperties';
 import Swal from "sweetalert2";
 
@@ -493,18 +494,21 @@ return (
     key={property._id || property.id || title}
     className="property-card"
   >
-                <div className="property-card__media">
+                <div className="property-card__media position-relative">
   {image ? (
-    <img
-      src={image}
-      alt={title}
-      className="img-fluid"
-      style={{
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-      }}
-    />
+    <>
+      <img
+        src={image}
+        alt={title}
+        className="img-fluid"
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+        }}
+      />
+      <VerifiedStamp verificationStatus={property?.verificationStatus} className="verified-stamp--overlay verified-stamp--card" />
+    </>
   ) : (
     <div>
       {title.split(" ").slice(0, 2).join(" ")}

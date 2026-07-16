@@ -3,6 +3,7 @@ import api from '../api/axiosConfig';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useLocation, useNavigate } from "react-router-dom";
 import OwnerSidebar from '../components/OwnerSidebar';
+import VerifiedStamp from '../components/VerifiedStamp';
 import "./OwnerDashboard.css";
 import Swal from "sweetalert2";
 import {
@@ -1363,7 +1364,7 @@ return filteredProperties.map((p) => {
     <div key={p._id} className="property-card">
 
       {image && (
-        <div className="property-card__media">
+        <div className="property-card__media position-relative">
           <img
             src={image}
             alt={p.title}
@@ -1373,6 +1374,7 @@ return filteredProperties.map((p) => {
               objectFit: "cover",
             }}
           />
+          <VerifiedStamp verificationStatus={p?.verificationStatus} className="verified-stamp--overlay verified-stamp--card" />
         </div>
       )}
 
