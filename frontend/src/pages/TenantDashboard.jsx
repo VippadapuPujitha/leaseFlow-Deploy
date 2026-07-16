@@ -89,23 +89,6 @@ const fetchMyRequests = async () => {
 
     setRentals(acceptedRentals);
 
-    // Check for expired requests
-    const expiredRequest = response.data.requests.find(
-      (req) => req.status === "expired"
-    );
-
-    console.log("Expired Request:", expiredRequest);
-
-    if (expiredRequest) {
-      Swal.fire({
-        icon: "info",
-        title: "Request Expired",
-        text: "Your rental request expired after 48 hours because the owner did not respond.",
-        timer: 3000,
-        showConfirmButton: false,
-      });
-    }
-
   } catch (error) {
     console.log(error);
   }
@@ -146,6 +129,23 @@ const handleWithdraw = async (requestId) => {
   fetchMyRequests();
 
 }, []);
+useEffect(() => {
+  if (activeSection !== "requests") return;
+
+  const expiredRequest = requests.find(
+    (req) => req.status === "expired"
+  );
+
+  if (expiredRequest) {
+    Swal.fire({
+      icon: "info",
+      title: "Request Expired",
+      text: "Your rental request expired after 48 hours because the owner did not respond.",
+      timer: 3000,
+      showConfirmButton: false,
+    });
+  }
+}, [activeSection, requests]);
 
 
   const filteredProperties = useMemo(() => {
