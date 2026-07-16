@@ -1,4 +1,5 @@
 const Property = require("../models/Property");
+const cloudinary = require("../config/cloudinary");
 const Request = require("../models/Request");
 const fs = require("fs");
 const path = require("path");

@@ -4,6 +4,9 @@ const {
   register,
   login,
   getProfile,
+  sendOtp,
+  verifyOtp,
+  resendOtp,
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -12,6 +15,9 @@ const roleMiddleware = require("../middleware/roleMiddleware");
 const router = express.Router();
 
 // Public Routes
+router.post("/send-otp", sendOtp);
+router.post("/verify-otp", verifyOtp);
+router.post("/resend-otp", resendOtp);
 router.post("/register", register);
 router.post("/login", login);
 
