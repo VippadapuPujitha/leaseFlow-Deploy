@@ -73,8 +73,25 @@ function OwnerVerificationStatus() {
                         <td>{property.city || '—'}</td>
                         <td>{property.rent ? `Rs. ${property.rent}` : '—'}</td>
                         <td>
-                          <AdminVerificationBadge verificationStatus={property.verificationStatus} />
-                        </td>
+  <AdminVerificationBadge
+    verificationStatus={property.verificationStatus}
+  />
+
+  {property.verificationStatus?.toLowerCase() === "rejected" &&
+    property.rejectionReason && (
+      <div
+        style={{
+          color: "#dc3545",
+          fontSize: "13px",
+          marginTop: "6px",
+          maxWidth: "220px",
+          whiteSpace: "normal",
+        }}
+      >
+        <strong>Reason:</strong> {property.rejectionReason}
+      </div>
+    )}
+</td>
                       </tr>
                     ))}
                   </tbody>
