@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axiosConfig';
+import VerifiedStamp from '../components/VerifiedStamp';
 
 function PropertyList() {
   const [properties, setProperties] = useState([]);
@@ -104,18 +105,21 @@ function PropertyList() {
                 className="property-card"
                 key={id}
               >
-                <div className="property-card__media">
+                <div className="property-card__media position-relative">
   {property.images && property.images.length > 0 ? (
-    <img
-      src={property.images[0]}
-      alt={title}
-      className="img-fluid"
-      style={{
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-      }}
-    />
+    <>
+      <img
+        src={property.images[0]}
+        alt={title}
+        className="img-fluid"
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+        }}
+      />
+      <VerifiedStamp verificationStatus={property?.verificationStatus} className="verified-stamp--overlay verified-stamp--card" />
+    </>
   ) : (
     <div>
       {title

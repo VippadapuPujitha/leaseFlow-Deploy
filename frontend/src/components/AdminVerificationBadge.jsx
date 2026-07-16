@@ -1,6 +1,6 @@
 import React from 'react';
 
-const normalizeVerificationStatus = (status) => {
+export const normalizeVerificationStatus = (status) => {
   const value = String(status || 'pending').toLowerCase();
   if (value === 'approved') return 'verified';
   if (value === 'not_requested') return 'pending';
