@@ -14,6 +14,8 @@ function Register() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
+const [otp, setOtp] = useState("");
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -52,19 +54,34 @@ function Register() {
     try {
       setLoading(true);
 
-      await api.post("/api/auth/register", {
-        name,
-        email,
-        phone,
-        password,
-        role,
-      });
+      if (!showOtp) {
 
-      setMessage("Registration successful. Redirecting to login...");
+  await api.post("/api/auth/send-otp", {
+    name,
+    email,
+    phone,
+    password,
+    role,
+  });
 
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
+  setMessage("OTP sent to your email.");
+
+  setShowOtp(true);
+
+} else {
+
+  await api.post("/api/auth/verify-otp", {
+    email,
+    otp,
+  });
+
+  setMessage("Registration successful. Redirecting to login...");
+
+  setTimeout(() => {
+    navigate("/login");
+  }, 1500);
+
+}
     } catch (err) {
       setError(
         err.response?.data?.message || "Registration failed"
@@ -100,20 +117,19 @@ function Register() {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} autoComplete="off">
                   <div className="mb-3">
                     <label className="form-label">
                       Full Name
                     </label>
                     <input
-                      type="text"
-                      className="form-control"
-                      value={name}
-                      onChange={(e) =>
-                        setName(e.target.value)
-                      }
-                      required
-                    />
+  type="text"
+  className="form-control"
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+  disabled={showOtp}
+  required
+/>
                   </div>
 
                   <div className="mb-3">
@@ -127,6 +143,8 @@ function Register() {
                       onChange={(e) =>
                         setEmail(e.target.value)
                       }
+                      disabled={showOtp}
+                      autoComplete="off"
                       required
                     />
                   </div>
@@ -155,6 +173,8 @@ function Register() {
                       onChange={(e) =>
                         setPassword(e.target.value)
                       }
+                      disabled={showOtp}
+                      autoComplete="off"
                       required
                     />
                   </div>
@@ -170,6 +190,7 @@ function Register() {
                       onChange={(e) =>
                         setConfirmPassword(e.target.value)
                       }
+                      disabled={showOtp}
                       required
                     />
                   </div>
@@ -184,6 +205,7 @@ function Register() {
                       onChange={(e) =>
                         setRole(e.target.value)
                       }
+                      disabled={showOtp}
                     >
                       <option value="tenant">
                         Tenant
@@ -194,15 +216,62 @@ function Register() {
                     </select>
                   </div>
 
+                  {showOtp && (
+  <div className="mb-3">
+    <label className="form-label">
+      Enter OTP
+    </label>
+
+    <input
+      type="text"
+      className="form-control"
+      value={otp}
+      maxLength={6}
+      onChange={(e) => setOtp(e.target.value)}
+      placeholder="Enter the OTP sent to your email"
+    />
+  </div>
+)}
+
+{showOtp && (
+  <div className="text-center mb-3">
+    <button
+      type="button"
+      className="btn btn-link p-0"
+      onClick={async () => {
+        try {
+          setError("");
+setMessage("");
+
+await api.post("/api/auth/resend-otp", {
+  email,
+});
+
+setOtp("");
+setMessage("New OTP sent.");
+        } catch (err) {
+          setError(
+            err.response?.data?.message || "Failed to resend OTP."
+          );
+        }
+      }}
+    >
+      Resend OTP
+    </button>
+  </div>
+)}
+
                   <button
-                    type="submit"
-                    className="btn btn-gradient w-100"
-                    disabled={loading}
-                  >
-                    {loading
-                      ? "Creating Account..."
-                      : "Create Account"}
-                  </button>
+  type="submit"
+  className="btn btn-gradient w-100"
+  disabled={loading}
+>
+  {loading
+    ? "Please Wait..."
+    : showOtp
+    ? "Verify OTP"
+    : "Create Account"}
+</button>
                 </form>
 
                 <p className="mt-4 text-center text-muted">
