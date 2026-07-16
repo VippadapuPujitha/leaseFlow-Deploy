@@ -542,7 +542,8 @@ const filteredRequests = requests.filter((r) => {
 
     case "cancelled":
       return r.status === "cancelled";
-
+    case "expired":
+  return r.status === "expired";
     default:
       return true; // All
   }
