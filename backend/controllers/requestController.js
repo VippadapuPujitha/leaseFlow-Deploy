@@ -278,8 +278,9 @@ exports.finalizeDeal = async (req, res) => {
 
 exports.deleteExpiredRequests = async () => {
   try {
+    console.log("Current Time:", new Date());
     const expiryTime = new Date(Date.now() - 48 * 60 * 60 * 1000);
-
+console.log("Expiry Time:", expiryTime);
     await Request.deleteMany({
       status: "pending",
       createdAt: { $lt: expiryTime }
