@@ -1,16 +1,27 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns");
 
 const sendEmail = async (email, otp) => {
   try {
     const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASSWORD
-  }
-});
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      family: 4,
+      lookup: (hostname, options, callback) => {
+        dns.resolve4(hostname, (err, addresses) => {
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, addresses[0], 4);
+          }
+        });
+      },
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASSWORD
+      }
+    });
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
