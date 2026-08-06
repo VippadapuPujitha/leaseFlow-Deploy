@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
 
@@ -13,26 +14,17 @@ const parseUser = () => {
 };
 
 export function AuthProvider({ children }) {
+
+  const navigate = useNavigate();
   const [user, setUser] = useState(() => parseUser());
-
-  useEffect(() => {
-    const stored = parseUser();
-    if (stored) {
-      setUser(stored);
-    }
-  }, []);
-
-  const login = (userData, token) => {
-    localStorage.setItem('leaseflow_user', JSON.stringify(userData));
-    localStorage.setItem('leaseflow_token', token);
-    setUser(userData);
-  };
 
   const logout = () => {
     localStorage.removeItem('leaseflow_user');
     localStorage.removeItem('leaseflow_token');
+
     setUser(null);
-    window.location.href = '/login';
+
+    navigate('/login', { replace: true });
   };
 
   return (
