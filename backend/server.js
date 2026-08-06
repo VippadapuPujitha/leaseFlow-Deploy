@@ -22,25 +22,13 @@ console.log("API Secret exists:", !!process.env.CLOUDINARY_API_SECRET);
 
 const app = express();
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      const allowedOrigins = [
-        "http://localhost:5173",
-        "https://lease-flow-deploy.vercel.app",
-        "https://leaseflow-git-main-vippadapu-pujitha.vercel.app",
-        "https://leaseflow-j5n90x2b4-vippadapu-pujitha.vercel.app"
-      ];
-
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: [
+    "https://lease-flow-deploy.vercel.app",
+    "http://localhost:5173"
+  ],
+  credentials: true
+}));
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
