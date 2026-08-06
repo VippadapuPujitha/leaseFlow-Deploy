@@ -27,7 +27,9 @@ app.use(
     origin: function (origin, callback) {
       const allowedOrigins = [
         "http://localhost:5173",
-        "https://lease-flow-deploy-pih9lj7hg-vippadapu-pujitha.vercel.app",
+        "https://lease-flow-deploy.vercel.app",
+        "https://leaseflow-git-main-vippadapu-pujitha.vercel.app",
+        "https://leaseflow-j5n90x2b4-vippadapu-pujitha.vercel.app"
       ];
 
       if (!origin || allowedOrigins.includes(origin)) {
