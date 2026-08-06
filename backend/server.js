@@ -24,7 +24,10 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://lease-flow-deploy-git-main-vippadapu-pujitha.vercel.app",
+    ],
     credentials: true,
   })
 );
