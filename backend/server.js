@@ -26,7 +26,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://lease-flow-deploy-git-main-vippadapu-pujitha.vercel.app",
+      "https://lease-flow-deploy-mqrfhqnhp-vippadapu-pujitha.vercel.app",
     ],
     credentials: true,
   })
